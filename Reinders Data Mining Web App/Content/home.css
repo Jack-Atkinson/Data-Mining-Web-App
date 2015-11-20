@@ -1,0 +1,30 @@
+﻿.view-box {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.view-box > .main-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    height: 100%;
+}
+
+.view-box > .footer {
+    border-top: 3px solid #989898;
+    flex: 0 1 40px;
+    vertical-align: middle;
+}
+
+.control {
+    min-width: 300px;
+    max-width: 300px;
+    flex-basis: auto;
+    flex-grow: 1;
+}
+
+.target-renderer {
+    flex: 1 1 auto;
+    border-left: 3px solid #989898;
+}
