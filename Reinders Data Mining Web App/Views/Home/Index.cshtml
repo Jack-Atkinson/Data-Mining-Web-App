@@ -2,11 +2,24 @@
     //ViewBag.Title = "Home Page";
 }
 
-<div class="main-content">
+@model Reinders_Data_Mining_Web_App.Models.WebPageData
+
+<script type="text/javascript">
+    function testfunc() {
+        $.get("/Home/Test", function (data) {
+            $("iframe").attr("srcdoc", data);
+        });
+    }
+</script>
+
+<section class="presenter">
     <div class="control lfloat">
-        f
+        <div id="logo" class="textalignc">
+            <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
+        </div>
+        <input type="button" onclick="testfunc()" value="Do the magic" />
     </div>
     <div class="target-renderer lfloat">
-        g
+        <iframe srcdoc=""></iframe>
     </div>
-</div>
+</section>

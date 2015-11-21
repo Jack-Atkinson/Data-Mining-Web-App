@@ -4,18 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reinders, Inc</title>
-    @Styles.Render("~/Content/core")
     @Styles.Render("~/Content/home")
-    @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
-    <section class="view-box">
+    <div class="main-view">
         @RenderBody()
         <div class="footer">
             <p>Reinders, Inc. Data Mining Web Application</p>
         </div>
-    </section>
-
+    </div>
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)

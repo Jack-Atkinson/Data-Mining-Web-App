@@ -23,11 +23,9 @@ namespace Reinders_Data_Mining_Web_App
                       "~/Scripts/bootstrap.js",
                       "~/Scripts/respond.js"));
 
-            bundles.Add(new StyleBundle("~/Content/core").Include(
-                      "~/Content/bootstrap.css",
-                      "~/Content/core.css"));
-
             bundles.Add(new StyleBundle("~/Content/home").Include(
+                      "~/Content/bootstrap.css",
+                      "~/Content/core.css",
                       "~/Content/home.css"));
         }
     }
