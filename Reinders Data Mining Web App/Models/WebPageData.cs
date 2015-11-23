@@ -8,6 +8,7 @@ namespace Reinders_Data_Mining_Web_App.Models
     public class WebPageData
     {
         public string URL { get; set; }
+        public string Host { get; set; }
         public string Source { get; set; }
     }
 }

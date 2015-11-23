@@ -23,10 +23,14 @@ namespace Reinders_Data_Mining_Web_App
                       "~/Scripts/bootstrap.js",
                       "~/Scripts/respond.js"));
 
+            bundles.Add(new ScriptBundle("~/bundles/dataminehook").Include(
+                      "~/Scripts/DaDataMinezHook.js"));
+
             bundles.Add(new StyleBundle("~/Content/home").Include(
                       "~/Content/bootstrap.css",
                       "~/Content/core.css",
-                      "~/Content/home.css"));
+                      "~/Content/home.css",
+                      "~/Content/DataMining.css"));
         }
     }
 }

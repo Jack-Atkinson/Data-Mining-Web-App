@@ -17,6 +17,46 @@
     margin-top: 15px;
 }
 
+.control ul {
+    margin-top: 15px;
+    padding: 0;
+    display: table;
+    width: 100%;
+    height: 25px;
+}
+
+.control li {
+    display: table-cell;
+    font-family: Verdana;
+    font-size: 1em;
+    text-align: center;
+    border-left: 1px solid #dddddd;
+    border-top: 1px solid #dddddd;
+    border-right: 1px solid #dddddd;
+
+}
+.control li:hover {
+    background-color: #eaeaea;
+}
+
+.control li a {
+    text-decoration: none;
+    color: #616161;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.unselectedTab {
+   -moz-box-shadow:    inset 0px -5px 5px -3px #616161;
+   -webkit-box-shadow: inset 0px -5px 5px -3px #616161;
+   box-shadow:         inset 0px -5px 5px -3px #616161;
+}
+
+#functionTab {
+    margin: 10px;
+}
+
 
 .target-renderer {
     width: calc(100% - 300px);

@@ -4,31 +4,32 @@
 
 @model Reinders_Data_Mining_Web_App.Models.WebPageData
 
-<script type="text/javascript">
-    function testfunc() {
-        $.get("/Home/Test", function (data) {
-            $("#target-frame").attr("srcdoc", data);
-            $("#target-frame").load(function () {
-                $("#target-frame").contents().find("body").click(function (event) {
-                    $(event.target).css('outline', '5px solid red');
-                });
-                $("#target-frame").contents().find("body").mouseover(function (event) {
-                    $(event.target).css('outline', '5px solid grey');
-                });
-                $("#target-frame").contents().find("body").mouseout(function (event) {
-                    $(event.target).css('outline', '0');
-                });
-            });
-        });
-    }
-</script>
+<script type="text/javascript"></script>
 
 <section class="presenter">
     <div class="control lfloat">
         <div id="logo" class="textalignc">
             <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
         </div>
-        <input type="button" onclick="testfunc()" value="Do the magic" />
+        <ul>
+            <li id="functionTabLink">
+                <a href="javascript:changeTab('functionTab')">Functions</a>
+            </li>
+            <li id="controlTabLink" class="unselectedTab">
+                <a href="javascript:changeTab('controlTab')">Control Panel</a>
+            </li>
+        </ul>
+        <div id="tabControl">
+            <div id="functionTab">
+                <div class="form-group">
+                    <label for="website">Website:</label>
+                    <input id="website" type="text" class="form-control"/>
+                </div>
+            </div>
+            <div id="controlTab" >
+
+            </div>
+        </div>
     </div>
     <div class="target-renderer lfloat">
         <iframe id="target-frame" srcdoc=""></iframe>
