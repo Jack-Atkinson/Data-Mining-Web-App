@@ -7,7 +7,18 @@
 <script type="text/javascript">
     function testfunc() {
         $.get("/Home/Test", function (data) {
-            $("iframe").attr("srcdoc", data);
+            $("#target-frame").attr("srcdoc", data);
+            $("#target-frame").load(function () {
+                $("#target-frame").contents().find("body").click(function (event) {
+                    $(event.target).css('outline', '5px solid red');
+                });
+                $("#target-frame").contents().find("body").mouseover(function (event) {
+                    $(event.target).css('outline', '5px solid grey');
+                });
+                $("#target-frame").contents().find("body").mouseout(function (event) {
+                    $(event.target).css('outline', '0');
+                });
+            });
         });
     }
 </script>
@@ -20,6 +31,6 @@
         <input type="button" onclick="testfunc()" value="Do the magic" />
     </div>
     <div class="target-renderer lfloat">
-        <iframe srcdoc=""></iframe>
+        <iframe id="target-frame" srcdoc=""></iframe>
     </div>
 </section>

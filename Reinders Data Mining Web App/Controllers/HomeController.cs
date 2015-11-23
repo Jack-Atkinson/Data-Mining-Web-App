@@ -20,8 +20,8 @@ namespace Reinders_Data_Mining_Web_App.Controllers
 
         public string Test() //wonderful hack to get around that bullshit SAME-ORIGIN crap websites do to "protect" themselves
         {
-            string url = "http://www.theverge.com";
-            string result;
+            string url = "http://www.kichler.com/products/product/impello-18-led-linear-bath-light-in-chrome-ch-4580.aspx";
+            string result = "<base href=\"http://www.kichler.com/\" target=\"_self\">";
             HttpWebRequest webrequest = (HttpWebRequest)HttpWebRequest.Create(url);
             webrequest.Method = "GET";
             webrequest.ContentLength = 0;
@@ -30,8 +30,10 @@ namespace Reinders_Data_Mining_Web_App.Controllers
 
             using (StreamReader stream = new StreamReader(response.GetResponseStream()))
             {
-                result = stream.ReadToEnd();
+                result += stream.ReadToEnd();
             }
+            result = result.Replace("<div", "<div id=\"testtarget\"");
+            //result = result.Replace("display:none", "");
             return result;
         }
     }
