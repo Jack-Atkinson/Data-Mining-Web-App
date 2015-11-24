@@ -1,29 +1,41 @@
-﻿var iframeLoad = (function () {
+﻿var iframeControl = (function () {
     
     var init = function (url) {
-        url = url || "http://www.google.com";
+        url = url || "http://www.reinders.com";
         changeSrcDoc(url); //just a default for now
+        bindLoad(defaultload);
     };
 
-    var changeSrcDoc = function (url) { //assumes url has already been validated
-        getSource(url, function (srcDoc) {
-            if (srcDoc == "error")
+    var defaultload = function () {
+        $('#loadinggif').hide(); //maybe has to go under load event
+        $('#website').css('border', '1px solid green');
+        $('#target-frame').contents().find('a').click(function (event) { //detect if link clicked is image!!
+            event.preventDefault();
+            var uri = $(this).attr("href");
+            if (uri.charAt(0) == '#' || uri == "")
                 return;
-            $("#target-frame").unbind('load');
-            $("#target-frame").attr("srcdoc", srcDoc);
-            $("#target-frame").load(function () {
-                $('#target-frame').contents().find('a').click( function (event) {
-                    var uri = $(this).attr("href");
-                    if (uri.charAt(0) == '#') {
-                        return;
-                    }
-                    if (uri.charAt(0) == '/')
-                        uri = $('#target-frame').contents().find('base').attr('href') + uri;
-                    $('#website').val(uri);
-                    changeSrcDoc(uri);
-                });
-            });
+            if (uri.charAt(0) == '/')
+                uri = $('#target-frame').contents().find('base').attr('href') + uri;
+            $('#website').val(uri);
+            changeSrcDoc(uri);
+        });
+    }
 
+    var bindLoad = function (loadfunc) {
+        $('#target-frame').unbind();
+        $('#target-frame').load(loadfunc);
+    }
+
+    var changeSrcDoc = function (url) { //assumes url has already been validated
+        $('#loadinggif').show();
+        $('#website').css('border', '1px solid orange');
+        getSource(url, function (srcDoc) {
+            if (srcDoc == "error") {
+                $('#loadinggif').hide();
+                $('#website').css('border', '1px solid red');
+                return;
+            }
+            $("#target-frame").attr("srcdoc", srcDoc);
         });
     };
 
@@ -48,6 +60,7 @@
     return {
         init: init,
         changeSrcDoc: changeSrcDoc,
+        bindLoad: bindLoad,
     };
 
 })();
@@ -70,7 +83,7 @@ var validate = (function () {
                     callback(false);
                 },
                 success: function (isUrl) {
-                    callback(Boolean(isUrl));
+                    callback(Boolean(isUrl), link);
                 }
             });
         }
@@ -81,16 +94,45 @@ var validate = (function () {
     }
 })();
 
+var filterControl = (function () {
+    var init = function () {
+        hide();
+    };
+    var show = function () {
+        $('#filtercontrols').show();
+        iframeControl.rebind()
+        iframeControl.bindLoad(function (event) {
+            event.preventDefault();
+        })
+    };
+
+    var hide = function () {
+        $('#filtercontrols').hide();
+    }
+    return {
+        init: init,
+        show: show,
+        hide: hide,
+    }
+})();
+
 $(document).ready(function() {
-    iframeLoad.init();
+    iframeControl.init();
+    filterControl.init();
 
     $('#website').on('input propertychange paste', function () {
-        validate.url($('#website').val(), function (isValid) {
+        validate.url($('#website').val(), function (isValid, link) {
             if (isValid) {
-                var test = $('#website').val()
-                iframeLoad.changeSrcDoc($('#website').val());
+                iframeControl.changeSrcDoc(link);
             }
         });
+    });
+
+    $('#enablefilters').change(function () {
+        if ($('#enablefilters').prop('checked'))
+            filterControl.show();
+        else
+            filterControl.hide();
     });
 
     /*$('#website').focusout(function () {
@@ -153,7 +195,7 @@ $(document).ready(function() {
 
 });
 
-function changeTab(pageId) {
+function changeTab(pageId) { //redo this ugly mess
     var tabCtrl = document.getElementById('tabControl');
     var pageToActivate = document.getElementById(pageId);
     for (var i = 0; i < tabCtrl.childNodes.length; i++) {
@@ -166,7 +208,6 @@ function changeTab(pageId) {
                         $('#controlTabLink').addClass('unselectedTab');
                         $('#functionTab').show();
                         $('#controlTab').hide();
-                        node.style.display = 'block';
                         break;
                     case 'controlTab':
                         $('#controlTabLink').removeClass('unselectedTab');

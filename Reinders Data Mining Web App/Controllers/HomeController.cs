@@ -29,7 +29,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 pageExists = response.StatusCode == HttpStatusCode.OK;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 pageExists = false;
             }
@@ -55,26 +55,24 @@ namespace Reinders_Data_Mining_Web_App.Controllers
                 return Json(url, JsonRequestBehavior.AllowGet);
             }
             string source;
-            //string result = "<base href=\"http://www.kichler.com/\" target=\"_self\">";
+
             HttpWebRequest webrequest = (HttpWebRequest)HttpWebRequest.Create(wpd.URL);
             webrequest.Method = "GET";
             webrequest.ContentLength = 0;
-
             WebResponse response = webrequest.GetResponse();
-
             using (StreamReader stream = new StreamReader(response.GetResponseStream()))
             {
                 source = stream.ReadToEnd();
             }
+
+
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(source);
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
-            string newBaseContent = string.Format("<base href='http://{0}/'/>", wpd.Host);
+            string newBaseContent = string.Format("<base href='http://{0}'/>", wpd.Host);
             HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
             head.PrependChild(newBase);
             wpd.Source = htmlDoc.DocumentNode.InnerHtml;
-            //wpd.Source = wpd.Source.Replace("<div", "<div id=\"testtarget\"");
-            //result = result.Replace("display:none", "");
             return Json(wpd.Source, JsonRequestBehavior.AllowGet);
         }
     }

@@ -144,6 +144,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\core.css" />
     <Content Include="Content\DataMining.css" />
+    <Content Include="Content\imgs\shared\hex-loader2.gif" />
     <Content Include="Content\imgs\shared\reindersLogo.png" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
