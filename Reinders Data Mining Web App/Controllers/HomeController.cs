@@ -19,6 +19,23 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return View();
         }
 
+        public JsonResult UrlValidation(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = WebRequestMethods.Http.Head;
+            bool pageExists;
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                pageExists = response.StatusCode == HttpStatusCode.OK;
+            }
+            catch (Exception ex)
+            {
+                pageExists = false;
+            }
+            return Json(pageExists, JsonRequestBehavior.AllowGet);
+        }
+
         public JsonResult GetTargetFrame(string url)
         {
             if (string.IsNullOrEmpty(url))
