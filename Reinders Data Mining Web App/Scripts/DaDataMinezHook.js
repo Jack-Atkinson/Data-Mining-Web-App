@@ -1,4 +1,5 @@
 ﻿var iframeControl = (function () {
+    var _url = "";
     
     var init = function (url) {
         url = url || "http://www.reinders.com";
@@ -7,24 +8,27 @@
     };
 
     var defaultload = function () {
-        $('#loadinggif').hide(); //maybe has to go under load event
-        $('#website').css('border', '1px solid green');
         $('#target-frame').contents().find('a').click(function (event) { //detect if link clicked is image!!
-            event.preventDefault();
+            //event.preventDefault();
+            event.stopImmediatePropagation();
             var uri = $(this).attr("href");
             if (uri.charAt(0) == '#' || uri == "")
                 return;
             if (uri.charAt(0) == '/')
                 uri = $('#target-frame').contents().find('base').attr('href') + uri;
+
+
             $('#website').val(uri);
             changeSrcDoc(uri);
+            return false;
         });
-    }
+    };
 
     var bindLoad = function (loadfunc) {
         $('#target-frame').unbind();
         $('#target-frame').load(loadfunc);
-    }
+        changeSrcDoc(_url);
+    };
 
     var changeSrcDoc = function (url) { //assumes url has already been validated
         $('#loadinggif').show();
@@ -35,7 +39,10 @@
                 $('#website').css('border', '1px solid red');
                 return;
             }
+            _url = url;
             $("#target-frame").attr("srcdoc", srcDoc);
+            $('#website').css('border', '1px solid green');
+            $('#loadinggif').hide();
         });
     };
 
@@ -61,6 +68,8 @@
         init: init,
         changeSrcDoc: changeSrcDoc,
         bindLoad: bindLoad,
+        defaultload: defaultload,
+        url: _url,
     };
 
 })();
@@ -89,26 +98,85 @@ var validate = (function () {
         }
     };
 
+    var isImage = function (link) {
+        var imageExts = ["tif", "tiff", "gif", "jpeg", "jpg", "jif", "jfif",
+                         "jp2", "jpx", "j2k", "j2c", "fpx", "pcd", "png", "pdf"];
+        var re = /(?:\.([^./]+))?$/;
+
+        var linkExt = re.exec(link)[1];
+
+        for (var i = 0; i < imageExts.length; i++) {
+            if (linkExt == imageExts[i]) {
+                alert("Cant navigate to images");
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     return {
         url: url,
+        isImage: isImage,
     }
 })();
 
 var filterControl = (function () {
+    var elementTree = [];
+    var lastElement;
+
     var init = function () {
+        $('.qtyplus').click(function (e) {
+            e.preventDefault();
+            fieldName = $(this).attr('field');
+            var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+            if (!isNaN(currentVal)) {
+                $(elementTree[currentVal]).css('outline', 'none');
+                $('input[name=' + fieldName + ']').val(currentVal + 1);
+                $(elementTree[currentVal + 1]).css('outline', '2px solid red');
+            } else {
+                $('input[name=' + fieldName + ']').val(0);
+            }
+        });
+        // This button will decrement the value till 0
+        $(".qtyminus").click(function (e) {
+            e.preventDefault();
+            fieldName = $(this).attr('field');
+            var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+            if (!isNaN(currentVal) && currentVal > 0) {
+                $(elementTree[currentVal]).css('outline', 'none');
+                $('input[name=' + fieldName + ']').val(currentVal - 1);
+                $(elementTree[currentVal - 1]).css('outline', '2px solid red');
+            } else {
+                $('input[name=' + fieldName + ']').val(0);
+            }
+        });
         hide();
     };
+
     var show = function () {
         $('#filtercontrols').show();
-        iframeControl.rebind()
-        iframeControl.bindLoad(function (event) {
-            event.preventDefault();
-        })
+        var linkHook = function () {
+            $("#target-frame").contents().find("body").click(function (event) {
+                event.stopImmediatePropagation();
+                //$(event.target).css('outline', '1px solid red');
+                $(event.target).addClass('selectedElement');
+                $('input[name=sensitivity]').val(0);
+                elementTree.push(event.target);
+                $(elementTree).parents().each(function () {
+                    elementTree.push(this);
+                });
+                return false;
+            });
+        };
+        iframeControl.bindLoad(linkHook);
     };
 
     var hide = function () {
         $('#filtercontrols').hide();
-    }
+        iframeControl.bindLoad(iframeControl.defaultload);
+    };
+
     return {
         init: init,
         show: show,
@@ -121,11 +189,13 @@ $(document).ready(function() {
     filterControl.init();
 
     $('#website').on('input propertychange paste', function () {
-        validate.url($('#website').val(), function (isValid, link) {
-            if (isValid) {
-                iframeControl.changeSrcDoc(link);
-            }
-        });
+        var input = $('#website').val();
+        if (!validate.isImage(input))
+            validate.url(input, function (isValid, link) {
+                if (isValid) {
+                    iframeControl.changeSrcDoc(link);
+                }
+            });
     });
 
     $('#enablefilters').change(function () {
@@ -215,7 +285,6 @@ function changeTab(pageId) { //redo this ugly mess
                         $('#controlTab').show();
                         $('#functionTab').hide();
                         break;
-
                 }
             }
         }

@@ -34,11 +34,11 @@
     height: 25px;
 }
 
-.control ul a {
+.control #tabSelection a {
     padding-top: 2px;
 }
 
-.control li {
+.control #tabSelection li {
     display: table-cell;
     font-family: Verdana;
     font-size: 1em;
@@ -91,11 +91,68 @@
     border: 0;
 }
 
+#filterSelection{
+    list-style-type: none;
+    width: 100%;
+}
+
+#filterSelection li {
+    float: left;
+    width: 20%;
+    height: 50px;
+    margin: 2.5px;
+}
+
+#filterSelection .redFilter {
+    background-color: red;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    border-radius: 5px;
+}
+
+#filterSelection .greenFilter {
+    background-color: green;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.selectedElement {
+    outline: 2px solid red;
+}
+
+#sensitivitycontrol {
+    text-align: center;
+    width: 98px;
+}
+
+#sensitivitylabel {
+    width: 180px;
+}
+
+#sensitivitycontrol .qty {
+    width: 40px;
+    height: 25px;
+    text-align: center;
+}
+
+#sensitivitycontrol .qtyplus { width:25px; height:25px;}
+#sensitivitycontrol .qtyminus { width:25px; height:25px;}
+
+
+/* ============================================================
+  SWITCH 1 - ROUND
+============================================================ */
 .cmn-toggle {
   position: absolute;
   margin-left: -9999px;
   visibility: hidden;
 }
+
 .cmn-toggle + label {
   display: block;
   position: relative;
@@ -107,9 +164,6 @@
   user-select: none;
 }
 
-/* ============================================================
-  SWITCH 1 - ROUND
-============================================================ */
 input.cmn-toggle-round + label {
   padding: 2px;
   width: 60px;

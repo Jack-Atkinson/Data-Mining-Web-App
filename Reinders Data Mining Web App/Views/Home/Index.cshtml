@@ -11,7 +11,7 @@
         <div id="logo" class="textalignc">
             <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
         </div>
-        <ul>
+        <ul id="tabSelection">
             <li id="functionTabLink">
                 <a href="javascript:changeTab('functionTab')">Functions</a>
             </li>
@@ -26,14 +26,25 @@
                     <input name="website" id="website" type="text" class="form-control"/>
                 </div>
                 <div id="filterswitch">
-                    <label class="lfloat" >Filter:</label>
+                    <label class="lfloat">Filter:</label>
                     <div class="switch lfloat">
                         <input id="enablefilters" class="cmn-toggle cmn-toggle-round" type="checkbox">
                         <label for="enablefilters"></label>
                     </div>
                 </div>
                 <div id="filtercontrols">
-                    asdfjasl;dj
+                    <ul id="filterSelection">
+                        <li class="redFilter">
+                        </li>
+                        <li class="greenFilter">
+                        </li>
+                    </ul>
+                    <label id="sensitivitylabel" for="sensitivity" class="lfloat">Level Sensitivity:</label>
+                    <div id="sensitivitycontrol" class="lfloat">
+                        <input type='button' value='-' class='qtyminus' field='sensitivity' />
+                        <input type='text' name='sensitivity' value='0' class='qty' />
+                        <input type='button' value='+' class='qtyplus' field='sensitivity' />
+                    </div>
                 </div>
                 <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
             </div>

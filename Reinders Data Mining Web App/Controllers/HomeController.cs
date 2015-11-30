@@ -70,8 +70,11 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             htmlDoc.LoadHtml(source);
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             string newBaseContent = string.Format("<base href='http://{0}'/>", wpd.Host);
+            string newCssLinkContent = "<link href=\"http://localhost:57409/Content/home.css\" rel=\"stylesheet\" type=\"text/css\">";
             HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
+            HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
             head.PrependChild(newBase);
+            head.PrependChild(newCssLink);
             wpd.Source = htmlDoc.DocumentNode.InnerHtml;
             return Json(wpd.Source, JsonRequestBehavior.AllowGet);
         }
