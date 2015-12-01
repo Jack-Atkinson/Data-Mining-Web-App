@@ -8,15 +8,17 @@
     };
 
     var defaultload = function () {
-        $('#target-frame').contents().find('a').click(function (event) { //detect if link clicked is image!!
-            //event.preventDefault();
-            event.stopImmediatePropagation();
+        $('#target-frame').contents().find('a').click(function (e) { //detect if link clicked is image!!
+            //e.preventDefault();
+            e.stopImmediatePropagation();
             var uri = $(this).attr("href");
             if (uri.charAt(0) == '#' || uri == "")
                 return;
             if (uri.charAt(0) == '/')
                 uri = $('#target-frame').contents().find('base').attr('href') + uri;
 
+            if (validate.isImage(uri))
+                return;
 
             $('#website').val(uri);
             changeSrcDoc(uri);
@@ -107,7 +109,6 @@ var validate = (function () {
 
         for (var i = 0; i < imageExts.length; i++) {
             if (linkExt == imageExts[i]) {
-                alert("Cant navigate to images");
                 return true;
             }
         }
@@ -122,21 +123,37 @@ var validate = (function () {
 })();
 
 var filterControl = (function () {
-    var elementTree = [];
-    var lastElement;
+    var filters = new Array(30); //30 filters maximum, but that seems overkill
+    var filteridx = -1; //this needs to be accurate no matter what! Also needs to be -1 becuase linkhook increments it after every click. First click will set it to 0 which is correct
 
     var init = function () {
-        $('.qtyplus').click(function (e) {
+        for (var i = 0; i < filters.length; i++)
+            filters[i] = 0; //put array into a know state
+
+        $('.qtyplus').click(function (e) { //these need to only increment as much as the array's length
             e.preventDefault();
             fieldName = $(this).attr('field');
             var currentVal = parseInt($('input[name=' + fieldName + ']').val());
             if (!isNaN(currentVal)) {
-                $(elementTree[currentVal]).css('outline', 'none');
+                $(filters[filteridx][currentVal]).removeClass('selectedElement');
                 $('input[name=' + fieldName + ']').val(currentVal + 1);
-                $(elementTree[currentVal + 1]).css('outline', '2px solid red');
+                $(filters[filteridx][currentVal + 1]).addClass('selectedElement');
             } else {
-                $('input[name=' + fieldName + ']').val(0);
+                $('input[name=' + fieldName + ']').val(0); //what if we are on level 4 and I enter in an invalid number, what happens...
             }
+            $.ajax({
+                url: '/Home/Test',
+                method: 'GET',
+                dataType: 'json',
+                error: function (xhr, status, error) {
+                    var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                    callback(false);
+                },
+                success: function (data) {
+                    $('#startmarker').val(data);
+                }
+            });
         });
         // This button will decrement the value till 0
         $(".qtyminus").click(function (e) {
@@ -144,9 +161,9 @@ var filterControl = (function () {
             fieldName = $(this).attr('field');
             var currentVal = parseInt($('input[name=' + fieldName + ']').val());
             if (!isNaN(currentVal) && currentVal > 0) {
-                $(elementTree[currentVal]).css('outline', 'none');
+                $(filters[filteridx][currentVal]).removeClass('selectedElement');
                 $('input[name=' + fieldName + ']').val(currentVal - 1);
-                $(elementTree[currentVal - 1]).css('outline', '2px solid red');
+                $(filters[filteridx][currentVal - 1]).addClass('selectedElement');
             } else {
                 $('input[name=' + fieldName + ']').val(0);
             }
@@ -157,15 +174,20 @@ var filterControl = (function () {
     var show = function () {
         $('#filtercontrols').show();
         var linkHook = function () {
-            $("#target-frame").contents().find("body").click(function (event) {
-                event.stopImmediatePropagation();
-                //$(event.target).css('outline', '1px solid red');
-                $(event.target).addClass('selectedElement');
+            $("#target-frame").contents().find("body").click(function (e) {
+                e.stopImmediatePropagation();
+                if (!e.ctrlKey)
+                    return false;
+                //$(e.target).css('outline', '1px solid red');
+                $(e.target).addClass('selectedElement');
                 $('input[name=sensitivity]').val(0);
-                elementTree.push(event.target);
+                var elementTree = [];
+                elementTree.push(e.target);
                 $(elementTree).parents().each(function () {
                     elementTree.push(this);
                 });
+                filteridx++;
+                filters[filteridx] = elementTree;
                 return false;
             });
         };
@@ -196,6 +218,8 @@ $(document).ready(function() {
                     iframeControl.changeSrcDoc(link);
                 }
             });
+        else
+            alert("Cant navigate to images");
     });
 
     $('#enablefilters').change(function () {
@@ -222,22 +246,22 @@ $(document).ready(function() {
             success: function (srcDoc) {
                 $("#target-frame").attr("srcdoc", srcDoc);
                 $("#target-frame").load(function () {
-                    $('#target-frame').contents().find('a').one("click", function (event) {
-                        event.stopPropagation();
+                    $('#target-frame').contents().find('a').one("click", function (e) {
+                        e.stopPropagation();
                         var uri = $(this).attr("href");
                         if (uri.charAt(0) == '/')
                             uri = document.location.origin + uri;
                         getIframeSrcDoc(uri);
                     });
 
-                    /*$("#target-frame").contents().find("body").click(function (event) {
-                        $(event.target).addClass("selectedElement");
+                    /*$("#target-frame").contents().find("body").click(function (e) {
+                        $(e.target).addClass("selectedElement");
                     });*/
-                    /*$("#target-frame").contents().find("body").mouseover(function (event) {
-                        $(event.target).css('outline', '5px solid grey');
+                    /*$("#target-frame").contents().find("body").mouseover(function (e) {
+                        $(e.target).css('outline', '5px solid grey');
                     });
-                    $("#target-frame").contents().find("body").mouseout(function (event) {
-                        $(event.target).css('outline', '0');
+                    $("#target-frame").contents().find("body").mouseout(function (e) {
+                        $(e.target).css('outline', '0');
                     });*/
                 /*});
             }
@@ -248,14 +272,14 @@ $(document).ready(function() {
             function (srcDoc) {
                 $("#target-frame").attr("srcdoc", srcDoc);
                 $("#target-frame").load(function () {
-                    $("#target-frame").contents().find("body").click(function (event) {
-                        $(event.target).css('outline', '5px solid red');
+                    $("#target-frame").contents().find("body").click(function (e) {
+                        $(e.target).css('outline', '5px solid red');
                     });
-                    $("#target-frame").contents().find("body").mouseover(function (event) {
-                        $(event.target).css('outline', '5px solid grey');
+                    $("#target-frame").contents().find("body").mouseover(function (e) {
+                        $(e.target).css('outline', '5px solid grey');
                     });
-                    $("#target-frame").contents().find("body").mouseout(function (event) {
-                        $(event.target).css('outline', '0');
+                    $("#target-frame").contents().find("body").mouseout(function (e) {
+                        $(e.target).css('outline', '0');
                     });
                 });
             }

@@ -1,59 +1,379 @@
-﻿@{
-    //ViewBag.Title = "Home Page";
-}
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinders, Inc</title>
+    @Styles.Render("~/Content/home")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script type="text/javascript">
+        var iframeControl = (function () { //maybe no need to have a filter switch, just see if ctrl was down or not and go on from there
+            var _url = "";
 
-@model Reinders_Data_Mining_Web_App.Models.WebPageData
+            var init = function (url) {
+                url = url || "http://www.reinders.com";
+                changeSrcDoc(url); //just a default for now
+                bindLoad(defaultload);
+            };
 
-<script type="text/javascript"></script>
+            var defaultload = function () {
+                $('#target-frame').contents().find('a').click(function (e) {
+                    e.stopImmediatePropagation();
+                    var url = $(this).attr("href");
+                    if (url.charAt(0) == '#' || url == "")
+                        return;
+                    if (url.charAt(0) == '/')
+                        url = $('#target-frame').contents().find('base').attr('href') + url;
 
-<section class="presenter">
-    <div class="control lfloat">
-        <div id="logo" class="textalignc">
-            <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
-        </div>
-        <ul id="tabSelection">
-            <li id="functionTabLink">
-                <a href="javascript:changeTab('functionTab')">Functions</a>
-            </li>
-            <li id="controlTabLink" class="unselectedTab">
-                <a href="javascript:changeTab('controlTab')">Control Panel</a>
-            </li>
-        </ul>
-        <div id="tabControl">
-            <div id="functionTab">
-                <div id="urlentry"class="form-group">
-                    <label for="website">Website:</label>
-                    <input name="website" id="website" type="text" class="form-control"/>
+                    if (validate.url(url)) {
+                        $('#website').val(url);
+                        iframeControl.changeSrcDoc(url);
+                    }
+                    return false;
+                });
+            };
+
+            var bindLoad = function (loadfunc) {
+                $('#target-frame').unbind();
+                $('#target-frame').load(loadfunc);
+                changeSrcDoc(_url); //make sure we grab a fresh copy
+            };
+
+            var changeSrcDoc = function (url) {
+                startLoading();
+                if (!validate.url(url)) {
+                    endLoading(false);
+                    return;
+                }
+                getSource(url, function (srcDoc) { //for some reason it seems like it is getting the source twice.
+                    if (srcDoc == "invalid") {
+                        endLoading(false);
+                        return;
+                    }
+                    _url = url;
+                    $("#target-frame").attr("srcdoc", srcDoc);
+                    endLoading(true);
+                });
+            };
+
+            var getSource = function (url, callback) {
+                $.ajax({
+                    url: '/Home/GetTargetFrame',
+                    method: 'GET',
+                    dataType: 'json',
+                    data: { url: url },
+                    success: function (srcDoc) {
+                        callback(srcDoc);
+                    },
+                    error: function (xhr, status, error) {
+                        var err = eval("(" + xhr.responseText + ")");
+                        alert(err.Message);
+                        callback("error");
+                    }
+                });
+
+            };
+
+            var startLoading = function () {
+                $('#loadinggif').show();
+                $('#website').css('border', '1px solid orange');
+            };
+
+            var endLoading = function (good) {
+                $('#loadinggif').hide();
+                if (good)
+                    $('#website').css('border', '1px solid green');
+                else
+                    $('#website').css('border', '1px solid red');
+            };
+
+            return {
+                init: init,
+                changeSrcDoc: changeSrcDoc,
+                bindLoad: bindLoad,
+                defaultload: defaultload,
+            };
+
+        })();
+
+
+        var validate = (function () {
+            var url = function (link) {
+                var linkRegexFilter = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
+                var linkRegex = new RegExp(linkRegexFilter, 'i');
+                if (link.length < 2083 && linkRegex.test(link))
+                    return true;
+            };
+
+            return {
+                url: url,
+            }
+        })();
+
+        var filterControl = (function () {
+            var filters = new Array(30); //30 filters maximum, but that seems overkill
+            var filteridx = -1; //this needs to be accurate no matter what! Also needs to be -1 becuase linkhook increments it after every click. First click will set it to 0 which is correct
+
+            var init = function () {
+                for (var i = 0; i < filters.length; i++)
+                    filters[i] = 0; //put array into a know state
+
+                $('.qtyplus').click(function (e) { //these need to only increment as much as the array's length
+                    e.preventDefault();
+                    fieldName = $(this).attr('field');
+                    var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+                    if (!isNaN(currentVal)) {
+                        $(filters[filteridx][currentVal]).removeClass('selectedElement');
+                        $('input[name=' + fieldName + ']').val(currentVal + 1);
+                        $(filters[filteridx][currentVal + 1]).addClass('selectedElement');
+                    } else {
+                        $('input[name=' + fieldName + ']').val(0); //what if we are on level 4 and I enter in an invalid number, what happens...
+                    }
+                });
+                // This button will decrement the value till 0
+                $(".qtyminus").click(function (e) {
+                    e.preventDefault();
+                    fieldName = $(this).attr('field');
+                    var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+                    if (!isNaN(currentVal) && currentVal > 0) {
+                        $(filters[filteridx][currentVal]).removeClass('selectedElement');
+                        $('input[name=' + fieldName + ']').val(currentVal - 1);
+                        $(filters[filteridx][currentVal - 1]).addClass('selectedElement');
+                    } else {
+                        $('input[name=' + fieldName + ']').val(0);
+                    }
+                });
+                hide();
+            };
+
+            var show = function () {
+                $('#filtercontrols').show();
+                var linkHook = function () {
+                    $("#target-frame").contents().find("body").click(function (e) {
+                        e.stopImmediatePropagation();
+                        if (!e.ctrlKey)
+                            return false;
+                        //$(e.target).css('outline', '1px solid red');
+                        $(e.target).addClass('selectedElement');
+                        $('input[name=sensitivity]').val(0);
+                        var elementTree = [];
+                        elementTree.push(e.target);
+                        $(elementTree).parents().each(function () {
+                            elementTree.push(this);
+                        });
+                        filteridx++;
+                        filters[filteridx] = elementTree;
+                        return false;
+                    });
+
+                    $("#target-frame").contents().find("body").mouseover(function (e) {
+                        $(e.target).css('outline', '2px solid grey');
+                    });
+                    $("#target-frame").contents().find("body").mouseout(function (e) {
+                        $(e.target).removeAttr('style');
+                    });
+                };
+                iframeControl.bindLoad(linkHook);
+            };
+
+            var hide = function () {
+                $('#filtercontrols').hide();
+                iframeControl.bindLoad(iframeControl.defaultload);
+            };
+
+            return {
+                init: init,
+                show: show,
+                hide: hide,
+            }
+        })();
+
+        $(document).ready(function () {
+            iframeControl.init();
+            filterControl.init();
+
+            var timer = 0;
+            $('#website').on('keyup', function () {
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(iframeControl.changeSrcDoc($('#website').val()), 400);
+            });
+
+            $('#enablefilters').change(function () {
+                if ($('#enablefilters').prop('checked'))
+                    filterControl.show();
+                else
+                    filterControl.hide();
+            });
+
+            /*$('#website').focusout(function () {
+                getIframeSrcDoc();
+            });
+        
+            function getIframeSrcDoc(iframeLink) {
+                iframeLink = iframeLink || $('#website').val();
+                if (iframeLink.charAt(0) == '#') {
+                    return;
+                }
+                $.ajax({
+                    url: '/Home/GetTargetFrame',
+                    method: 'GET',
+                    dataType: 'json',
+                    data: {url: iframeLink },
+                    success: function (srcDoc) {
+                        $("#target-frame").attr("srcdoc", srcDoc);
+                        $("#target-frame").load(function () {
+                            $('#target-frame').contents().find('a').one("click", function (e) {
+                                e.stopPropagation();
+                                var uri = $(this).attr("href");
+                                if (uri.charAt(0) == '/')
+                                    uri = document.location.origin + uri;
+                                getIframeSrcDoc(uri);
+                            });
+        
+                            /*$("#target-frame").contents().find("body").click(function (e) {
+                                $(e.target).addClass("selectedElement");
+                            });*/
+            /*$("#target-frame").contents().find("body").mouseover(function (e) {
+                $(e.target).css('outline', '5px solid grey');
+            });
+            $("#target-frame").contents().find("body").mouseout(function (e) {
+                $(e.target).css('outline', '0');
+            });*/
+            /*});
+        }
+    });
+}*/
+            /*$.get("/Home/GetTargetFrame",
+                { url: encodeURIComponent($('#website').val()) },
+                function (srcDoc) {
+                    $("#target-frame").attr("srcdoc", srcDoc);
+                    $("#target-frame").load(function () {
+                        $("#target-frame").contents().find("body").click(function (e) {
+                            $(e.target).css('outline', '5px solid red');
+                        });
+                        $("#target-frame").contents().find("body").mouseover(function (e) {
+                            $(e.target).css('outline', '5px solid grey');
+                        });
+                        $("#target-frame").contents().find("body").mouseout(function (e) {
+                            $(e.target).css('outline', '0');
+                        });
+                    });
+                }
+            );*/
+
+
+
+        });
+
+        function changeTab(pageId) { //redo this ugly mess
+            var tabCtrl = document.getElementById('tabControl');
+            var pageToActivate = document.getElementById(pageId);
+            for (var i = 0; i < tabCtrl.childNodes.length; i++) {
+                var node = tabCtrl.childNodes[i];
+                if (node.nodeType == 1) {
+                    if (node == pageToActivate) {
+                        switch ($(node).attr('id')) {
+                            case 'functionTab':
+                                $('#functionTabLink').removeClass('unselectedTab');
+                                $('#controlTabLink').addClass('unselectedTab');
+                                $('#functionTab').show();
+                                $('#controlTab').hide();
+                                break;
+                            case 'controlTab':
+                                $('#controlTabLink').removeClass('unselectedTab');
+                                $('#functionTabLink').addClass('unselectedTab');
+                                $('#controlTab').show();
+                                $('#functionTab').hide();
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="main-view">
+        <section class="presenter">
+            <div class="control lfloat">
+                <div id="logo" class="textalignc">
+                    <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
                 </div>
-                <div id="filterswitch">
-                    <label class="lfloat">Filter:</label>
-                    <div class="switch lfloat">
-                        <input id="enablefilters" class="cmn-toggle cmn-toggle-round" type="checkbox">
-                        <label for="enablefilters"></label>
+                <ul id="tabSelection">
+                    <li id="functionTabLink">
+                        <a href="javascript:changeTab('functionTab')">Functions</a>
+                    </li>
+                    <li id="controlTabLink" class="unselectedTab">
+                        <a href="javascript:changeTab('controlTab')">Control Panel</a>
+                    </li>
+                </ul>
+                <div id="tabControl">
+                    <div id="functionTab">
+                        <div id="urlentry" class="form-group">
+                            <label for="website">Website:</label>
+                            <input name="website" id="website" type="text" class="form-control" />
+                        </div>
+                        <div id="filterswitch">
+                            <label class="lfloat">Filter:</label>
+                            <div class="switch lfloat">
+                                <input id="enablefilters" class="cmn-toggle cmn-toggle-round" type="checkbox">
+                                <label for="enablefilters"></label>
+                            </div>
+                        </div>
+                        <div id="filtercontrols" style="display: none;">
+                            <div id="sensitivitycontrol">
+                                <label id="sensitivitylabel" for="sensitivity" class="lfloat">Level Sensitivity:</label>
+                                <div id="sensitivitybuttons" class="lfloat">
+                                    <input type='button' value='-' class='qtyminus' field='sensitivity' />
+                                    <input type='text' name='sensitivity' value='0' class='qty' />
+                                    <input type='button' value='+' class='qtyplus' field='sensitivity' />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="startmarker">Start Marker:</label>
+                                <input name="startmarker" id="startmarker" type="text" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="endmarker">End Marker:</label>
+                                <input name="endmarker" id="endmarker" type="text" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="prefix">Prefix:</label>
+                                <input name="prefix" id="prefix" type="text" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="strip">Strip:</label>
+                                <input name="strip" id="strip" type="text" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="offset">Offset:</label>
+                                <input name="offset" id="offset" type="text" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="endmarker">Column:</label>
+                                <select class="selectpicker">
+                                    <option>Just a test</option>
+                                </select>
+                            </div>
+                        </div>
+                        <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
+                    </div>
+                    <div id="controlTab">
+
                     </div>
                 </div>
-                <div id="filtercontrols">
-                    <ul id="filterSelection">
-                        <li class="redFilter">
-                        </li>
-                        <li class="greenFilter">
-                        </li>
-                    </ul>
-                    <label id="sensitivitylabel" for="sensitivity" class="lfloat">Level Sensitivity:</label>
-                    <div id="sensitivitycontrol" class="lfloat">
-                        <input type='button' value='-' class='qtyminus' field='sensitivity' />
-                        <input type='text' name='sensitivity' value='0' class='qty' />
-                        <input type='button' value='+' class='qtyplus' field='sensitivity' />
-                    </div>
-                </div>
-                <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
             </div>
-            <div id="controlTab" >
-
+            <div class="target-renderer lfloat">
+                <iframe id="target-frame" srcdoc=""></iframe>
             </div>
+        </section>
+        <div class="footer">
+            <p>Reinders, Inc. Data Mining Web Application</p>
         </div>
     </div>
-    <div class="target-renderer lfloat">
-        <iframe id="target-frame" srcdoc=""></iframe>
-    </div>
-</section>
+</body>
+</html>
+

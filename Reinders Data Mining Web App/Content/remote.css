@@ -1,0 +1,15 @@
+﻿.selectedElement {
+    outline: 2px solid red !important;
+}
+.selectedElement:link {
+    outline: 2px solid red !important;
+}
+.selectedElement:visited {
+    outline: 2px solid red !important;
+}
+.selectedElement:hover {
+    outline: 2px solid red !important;
+}
+.selectedElement:active {
+    outline: 2px solid red !important;
+}

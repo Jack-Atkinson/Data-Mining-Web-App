@@ -1,4 +1,4 @@
-﻿.presenter {
+﻿.presenter { /*need to make a seperate css file that only includes the selectedElement class. No need to make iframe inherit all our custom rules*/
     width: 100%;
     height: calc(100% - 35px);
     overflow: hidden;
@@ -74,6 +74,10 @@
     margin: 10px;
 }
 
+#filterswitch {
+    margin-bottom: 15px;
+}
+
 #filterswitch label:first-child {
     line-height: 28px;
     width: 218px;
@@ -91,41 +95,11 @@
     border: 0;
 }
 
-#filterSelection{
-    list-style-type: none;
-    width: 100%;
-}
-
-#filterSelection li {
-    float: left;
-    width: 20%;
-    height: 50px;
-    margin: 2.5px;
-}
-
-#filterSelection .redFilter {
-    background-color: red;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -ms-border-radius: 5px;
-    -o-border-radius: 5px;
-    border-radius: 5px;
-}
-
-#filterSelection .greenFilter {
-    background-color: green;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    -ms-border-radius: 5px;
-    -o-border-radius: 5px;
-    border-radius: 5px;
-}
-
-.selectedElement {
-    outline: 2px solid red;
-}
-
 #sensitivitycontrol {
+    margin-bottom: 15px;
+}
+
+#sensitivitybuttons {
     text-align: center;
     width: 98px;
 }
@@ -134,19 +108,15 @@
     width: 180px;
 }
 
-#sensitivitycontrol .qty {
+#sensitivitybuttons .qty {
     width: 40px;
     height: 25px;
     text-align: center;
 }
 
-#sensitivitycontrol .qtyplus { width:25px; height:25px;}
-#sensitivitycontrol .qtyminus { width:25px; height:25px;}
+#sensitivitybuttons .qtyplus { width:25px; height:25px;}
+#sensitivitybuttons .qtyminus { width:25px; height:25px;}
 
-
-/* ============================================================
-  SWITCH 1 - ROUND
-============================================================ */
 .cmn-toggle {
   position: absolute;
   margin-left: -9999px;
@@ -213,4 +183,8 @@ input.cmn-toggle-round:checked + label:before {
 }
 input.cmn-toggle-round:checked + label:after {
   margin-left: 30px;
+}
+
+.bootstrap-select {
+    width: 100% !important;
 }
