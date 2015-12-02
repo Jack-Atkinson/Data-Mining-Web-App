@@ -60,6 +60,10 @@
     height: 100%;
 }
 
+#urlentry {
+    margin: 10px;
+}
+
 .unselectedTab {
    -moz-box-shadow:    inset 0px -5px 5px -3px #616161;
    -webkit-box-shadow: inset 0px -5px 5px -3px #616161;

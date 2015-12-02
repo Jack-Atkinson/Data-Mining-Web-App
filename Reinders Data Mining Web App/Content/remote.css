@@ -13,3 +13,20 @@
 .selectedElement:active {
     outline: 2px solid red !important;
 }
+
+
+.deletedElement {
+    outline: 2px solid purple !important;
+}
+.deletedElement:link {
+    outline: 2px solid purple !important;
+}
+.deletedElement:visited {
+    outline: 2px solid purple !important;
+}
+.deletedElement:hover {
+    outline: 2px solid purple !important;
+}
+.deletedElement:active {
+    outline: 2px solid purple !important;
+}

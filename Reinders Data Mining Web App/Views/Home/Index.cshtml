@@ -123,12 +123,14 @@
                     e.preventDefault();
                     fieldName = $(this).attr('field');
                     var currentVal = parseInt($('input[name=' + fieldName + ']').val());
-                    if (!isNaN(currentVal)) {
+                    if (!isNaN(currentVal) && (currentVal + 1) < filters[filteridx].length) {
                         $(filters[filteridx][currentVal]).removeClass('selectedElement');
                         $('input[name=' + fieldName + ']').val(currentVal + 1);
                         $(filters[filteridx][currentVal + 1]).addClass('selectedElement');
                     } else {
+                        $(filters[filteridx][currentVal]).removeClass('selectedElement');
                         $('input[name=' + fieldName + ']').val(0); //what if we are on level 4 and I enter in an invalid number, what happens...
+                        $(filters[filteridx][0]).addClass('selectedElement');
                     }
                 });
                 // This button will decrement the value till 0
@@ -152,26 +154,43 @@
                 var linkHook = function () {
                     $("#target-frame").contents().find("body").click(function (e) {
                         e.stopImmediatePropagation();
-                        if (!e.ctrlKey)
-                            return false;
-                        //$(e.target).css('outline', '1px solid red');
-                        $(e.target).addClass('selectedElement');
-                        $('input[name=sensitivity]').val(0);
-                        var elementTree = [];
-                        elementTree.push(e.target);
-                        $(elementTree).parents().each(function () {
-                            elementTree.push(this);
-                        });
-                        filteridx++;
-                        filters[filteridx] = elementTree;
+                        if (e.ctrlKey) { //clean this up, looks nasty
+                            if ($(e.target).hasClass('selectedElement')) {
+                                (function () {
+                                    for (var j = 0; j < filters.length; j++)
+                                        for (var k = 0; k < filters[j].length; k++)
+                                            if (filters[j][k] == e.target) {
+                                                filteridx = j;
+                                                $('input[name=' + fieldName + ']').val(k);
+                                                return;
+                                            }
+                                        return;
+                                })();
+                                return false;
+                            }
+                            $(e.target).addClass('selectedElement');
+                            $('input[name=sensitivity]').val(0);
+                            var elementTree = [];
+                            elementTree.push(e.target);
+                            $(elementTree).parents().each(function () {
+                                elementTree.push(this);
+                            });
+                            filteridx++;
+                            filters[filteridx] = elementTree;
+                        }
+
+                        if (e.altKey) {
+                            $(e.target).addClass('deletedElement');
+                        }
+
                         return false;
                     });
 
                     $("#target-frame").contents().find("body").mouseover(function (e) {
-                        $(e.target).css('outline', '2px solid grey');
+                        $(e.target).css('outline', '2px solid grey', 'important');
                     });
                     $("#target-frame").contents().find("body").mouseout(function (e) {
-                        $(e.target).removeAttr('style');
+                        $(e.target).css('outline', '');
                     });
                 };
                 iframeControl.bindLoad(linkHook);
@@ -192,13 +211,18 @@
         $(document).ready(function () {
             iframeControl.init();
             filterControl.init();
+            $('#controlTab').hide();
 
-            var timer = 0;
-            $('#website').on('keyup', function () {
-                if (timer) {
-                    clearTimeout(timer);
-                }
-                timer = setTimeout(iframeControl.changeSrcDoc($('#website').val()), 400);
+            var timer;
+            var typingInterval = 1000;
+
+            $('#website').keyup(function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () { iframeControl.changeSrcDoc($('#website').val()) }, typingInterval);
+            });
+
+            $('#website').keydown(function () {
+                clearTimeout(timer);
             });
 
             $('#enablefilters').change(function () {
@@ -246,6 +270,10 @@
         }
     });
 }*/
+            $('#website').focusout(function () {
+                iframeLink = iframeLink || $('#website').val();
+
+            });
             /*$.get("/Home/GetTargetFrame",
                 { url: encodeURIComponent($('#website').val()) },
                 function (srcDoc) {
@@ -302,21 +330,21 @@
                 <div id="logo" class="textalignc">
                     <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
                 </div>
+                <div id="urlentry" class="form-group">
+                    <label for="website">Website:</label>
+                    <input name="website" id="website" type="text" class="form-control" />
+                </div>
                 <ul id="tabSelection">
                     <li id="functionTabLink">
-                        <a href="javascript:changeTab('functionTab')">Functions</a>
+                        <a href="javascript:changeTab('functionTab')">Filter Creation</a>
                     </li>
                     <li id="controlTabLink" class="unselectedTab">
-                        <a href="javascript:changeTab('controlTab')">Control Panel</a>
+                        <a href="javascript:changeTab('controlTab')">Filters</a>
                     </li>
                 </ul>
                 <div id="tabControl">
                     <div id="functionTab">
-                        <div id="urlentry" class="form-group">
-                            <label for="website">Website:</label>
-                            <input name="website" id="website" type="text" class="form-control" />
-                        </div>
-                        <div id="filterswitch">
+                        <div id="filterswitch"> <!--Must change these ID's to their new meaning!-->
                             <label class="lfloat">Filter:</label>
                             <div class="switch lfloat">
                                 <input id="enablefilters" class="cmn-toggle cmn-toggle-round" type="checkbox">
@@ -362,7 +390,7 @@
                         <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
                     </div>
                     <div id="controlTab">
-
+                        <p>@ViewBag.Test</p>
                     </div>
                 </div>
             </div>

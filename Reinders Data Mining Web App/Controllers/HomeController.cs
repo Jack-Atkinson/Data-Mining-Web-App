@@ -15,6 +15,8 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // GET: Home
         public ActionResult Index()
         {
+            string test = "Hello";
+            ViewBag.Test = test;
             return View();
         }
 
