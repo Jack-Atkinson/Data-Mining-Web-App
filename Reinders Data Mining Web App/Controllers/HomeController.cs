@@ -12,6 +12,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
 {
     public class HomeController : Controller
     {
+        Models.Filter filter = new Models.Filter();
         // GET: Home
         public ActionResult Index()
         {
@@ -39,7 +40,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             htmlDoc.LoadHtml(source);
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             string newBaseContent = string.Format("<base href='http://{0}'/>", socket.Host);
-            string newCssLinkContent = "<link href=\"Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
+            string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
             HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
             HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
             head.PrependChild(newBase);
@@ -47,5 +48,11 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             source = htmlDoc.DocumentNode.InnerHtml;
             return Json(source, JsonRequestBehavior.AllowGet);
         }
+
+       /* public JsonResult AddFilter(string)
+        {
+
+            return Json();
+        }*/
     }
 }

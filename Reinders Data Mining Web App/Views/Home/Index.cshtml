@@ -8,6 +8,17 @@
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     <script type="text/javascript">
+
+        function arraysAreIdentical(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            for (var i = 0, len = arr1.length; i < len; i++) {
+                if ($(arr1[i]).nodeName !== $(arr2[i]).nodeName) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         var iframeControl = (function () { //maybe no need to have a filter switch, just see if ctrl was down or not and go on from there
             var _url = "";
 
@@ -27,7 +38,7 @@
                         url = $('#target-frame').contents().find('base').attr('href') + url;
 
                     if (validate.url(url)) {
-                        $('#website').val(url);
+                        $('#website').val(url); //this isnt always correct, some bugs occur if websites use different ways of navigation
                         iframeControl.changeSrcDoc(url);
                     }
                     return false;
@@ -112,7 +123,7 @@
         })();
 
         var filterControl = (function () {
-            var filters = new Array(30); //30 filters maximum, but that seems overkill
+            var filters = new Array(30);
             var filteridx = -1; //this needs to be accurate no matter what! Also needs to be -1 becuase linkhook increments it after every click. First click will set it to 0 which is correct
 
             var init = function () {
@@ -127,6 +138,7 @@
                         $(filters[filteridx][currentVal]).removeClass('selectedElement');
                         $('input[name=' + fieldName + ']').val(currentVal + 1);
                         $(filters[filteridx][currentVal + 1]).addClass('selectedElement');
+                        $('#startmarker').val($(filters[filteridx][currentVal - 1]).clone().wrap('<div>').parent());
                     } else {
                         $(filters[filteridx][currentVal]).removeClass('selectedElement');
                         $('input[name=' + fieldName + ']').val(0); //what if we are on level 4 and I enter in an invalid number, what happens...
@@ -142,6 +154,7 @@
                         $(filters[filteridx][currentVal]).removeClass('selectedElement');
                         $('input[name=' + fieldName + ']').val(currentVal - 1);
                         $(filters[filteridx][currentVal - 1]).addClass('selectedElement');
+                        $('#startmarker').val($(filters[filteridx][currentVal - 1]).clone().wrap('<div>').parent());
                     } else {
                         $('input[name=' + fieldName + ']').val(0);
                     }
@@ -154,29 +167,31 @@
                 var linkHook = function () {
                     $("#target-frame").contents().find("body").click(function (e) {
                         e.stopImmediatePropagation();
-                        if (e.ctrlKey) { //clean this up, looks nasty
-                            if ($(e.target).hasClass('selectedElement')) {
-                                (function () {
-                                    for (var j = 0; j < filters.length; j++)
-                                        for (var k = 0; k < filters[j].length; k++)
-                                            if (filters[j][k] == e.target) {
-                                                filteridx = j;
-                                                $('input[name=' + fieldName + ']').val(k);
-                                                return;
-                                            }
-                                        return;
-                                })();
-                                return false;
-                            }
-                            $(e.target).addClass('selectedElement');
-                            $('input[name=sensitivity]').val(0);
+                        if (e.ctrlKey) {
                             var elementTree = [];
                             elementTree.push(e.target);
                             $(elementTree).parents().each(function () {
                                 elementTree.push(this);
                             });
+                            for (var i = 0; i < elementTree.length; i++) {
+                                if ($(elementTree[i]).hasClass('selectedElement')) {
+                                    (function (i) {
+                                        for (var j = 0; j < filters.length; j++)
+                                            if (arraysAreIdentical(filters[j], elementTree)) {
+                                                filteridx = j;
+                                                $('input[name=sensitivity]').val(i);
+                                               return;
+                                            }
+                                        return;
+                                    })(i);
+                                    return false;
+                                }
+                            }
+                            $(e.target).addClass('selectedElement');
+                            $('input[name=sensitivity]').val(0);
                             filteridx++;
                             filters[filteridx] = elementTree;
+                            return false;
                         }
 
                         if (e.altKey) {
@@ -268,12 +283,7 @@
             });*/
             /*});
         }
-    });
-}*/
-            $('#website').focusout(function () {
-                iframeLink = iframeLink || $('#website').val();
-
-            });
+    });*/
             /*$.get("/Home/GetTargetFrame",
                 { url: encodeURIComponent($('#website').val()) },
                 function (srcDoc) {
