@@ -117,11 +117,13 @@ var FilterControl = (function (window) {
 
             $(_iframe).contents().find("body").mouseover(function (e) {
                 if ($('#enablefilters').prop('checked'))
-                    $(e.target).css('outline', '2px solid grey', 'important');
+                    $(e.target).css('filter', 'invert(100%)');
+                    //$(e.target).css({'outline': '2px solid grey !important', 'filter': 'invert(100%)'});
             });
             $(_iframe).contents().find("body").mouseout(function (e) {
                 if ($('#enablefilters').prop('checked'))
-                    $(e.target).css('outline', '');
+                    $(e.target).css('filter', 'invert(0%)'); //get filter working
+                    //$(e.target).css({'outline': '', 'filter': 'invert(0%)'});
             });
         });
 
