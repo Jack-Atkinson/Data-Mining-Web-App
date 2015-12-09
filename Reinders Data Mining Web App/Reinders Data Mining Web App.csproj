@@ -164,6 +164,8 @@
     <Content Include="Scripts\i18n\defaults-en_US.min.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
+    <Content Include="Scripts\Library.js" />
+    <Content Include="Scripts\View.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">

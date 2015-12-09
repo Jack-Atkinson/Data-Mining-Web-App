@@ -21,6 +21,10 @@ namespace Reinders_Data_Mining_Web_App
                       "~/Content/core.css",
                       "~/Content/home.css",
                       "~/Content/bootstrap-select.css"));
+
+            bundles.Add(new StyleBundle("~/library/datamining").Include(
+                      "~/Scripts/Library.js",
+                      "~/Scripts/View.js"));
         }
     }
 }

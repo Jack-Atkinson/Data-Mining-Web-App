@@ -16,8 +16,8 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            string test = "Hello";
-            ViewBag.Test = test;
+            /*string test = "Hello";
+            ViewBag.Test = test;*/
             return View();
         }
 
@@ -27,16 +27,16 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return Json(blah, JsonRequestBehavior.AllowGet);
         }
 
-        public JsonResult GetTargetFrame(string url)
+        public JsonResult GetTargetSource(string url)
         {
             HTTPSocket socket = new HTTPSocket(url);
             string source = socket.GetSource();
 
-            if ((source == "invalid") || (source == "image"))
+            if (source == "invalid")
                 return Json(source, JsonRequestBehavior.AllowGet);
 
 
-            HtmlDocument htmlDoc = new HtmlDocument();
+            HtmlDocument htmlDoc = new HtmlDocument(); //urgh sooo ugly
             htmlDoc.LoadHtml(source);
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             string newBaseContent = string.Format("<base href='http://{0}'/>", socket.Host);
@@ -49,10 +49,16 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return Json(source, JsonRequestBehavior.AllowGet);
         }
 
-       /* public JsonResult AddFilter(string)
+        [AcceptVerbs(HttpVerbs.Post)]
+        public ActionResult FileUpload(HttpPostedFileBase uploadFile)
         {
-
-            return Json();
-        }*/
+            if (uploadFile.ContentLength > 0)
+            {
+                string filePath = Path.Combine(HttpContext.Server.MapPath("../Uploads"),
+                                               Path.GetFileName(uploadFile.FileName));
+                uploadFile.SaveAs(filePath);
+            }
+            return RedirectToAction("Index");
+        }
     }
 }
