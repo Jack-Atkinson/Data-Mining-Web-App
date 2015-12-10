@@ -94,9 +94,11 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
 })();
 
 var FilterControl = (function (window) {
-    var _iframe;
+    var _iframe = {};
     var _filters = new Array(30);
-    var _filteridx = -1;
+    var _filteridx = 0;
+    var _inUse = false;
+    var _elementTree = []
 
     var init = function (iframe) {
         hide();
@@ -108,7 +110,7 @@ var FilterControl = (function (window) {
 
         $(_iframe).load(function () {
             $(_iframe).contents().find("body").click(function (e) {
-                if ($('#enablefilters').prop('checked'))
+                if ($('#enablefilters').prop('checked') && !_inUse)
                     filter(e);
                 return false;
             });
@@ -119,11 +121,11 @@ var FilterControl = (function (window) {
             });
 
             $(_iframe).contents().find("body").mouseover(function (e) {
-                if ($('#enablefilters').prop('checked')) 
+                if ($('#enablefilters').prop('checked') && !_inUse)
                     $(e.target).css('outline', '2px solid grey', 'important');
             });
             $(_iframe).contents().find("body").mouseout(function (e) {
-                if ($('#enablefilters').prop('checked'))
+                if ($('#enablefilters').prop('checked')) //doesnt need to check if in use
                     $(e.target).css('outline', '');
             });
         });
@@ -167,35 +169,62 @@ var FilterControl = (function (window) {
             }
             return false;
         });
+
+        $('#savefilter').click(function (e) {
+            saveFilter(e);
+        });
+
+        $('#deletefilter').click(function (e) {
+            deleteFilter(e)
+        });
     };
 
     var filter = function (e) {
         if (e.ctrlKey &&
             !$(e.target).hasClass('selectedElement') &&
             !doesOverlap(e.target)) {
-            var elementTree = [];
-            elementTree.push(e.target);
-            $(elementTree).parents().each(function () {
-                elementTree.push(this);
+            _inUse = true;
+            $(e.target).trigger("mouseout"); //get rid of our outline
+
+            //generate element hierarchy 
+            _elementTree = []; 
+            _elementTree.push(e.target);
+            $(_elementTree).parents().each(function () {
+                _elementTree.push(this);
             });
-            for (var i = 0; i < elementTree.length; i++) {
-                if ($(elementTree[i]).hasClass('selectedElement')) {
-                    (function (i) {
+
+
+
+            //Scan elements in hierarchy to see if a parent has already been selected
+            var selectedElementIdx = 0;
+            for (var i = 0; i < _elementTree.length; i++) {
+                if ($(_elementTree[i]).hasClass('selectedElement')) {
+                    selectedElementIdx = i;
+                    (function (i) { //get filteridx of parent with selectedElement
                         for (var j = 0; j < _filters.length; j++)
-                            if (Validate.ArraysAreEqual(_filters[j], elementTree)) {
-                                _filter.filteridx = j;
-                                $('input[name=sensitivity]').val(i);
+                            if (Validate.ArraysAreEqual(_filters[j], _elementTree)) {
+                                _filteridx = j;
                                 return;
                             }
                         return;
-                    })(i);
-                    return;
+                    })(selectedElementIdx);
                 }
+                else
+                    $(e.target).addClass('selectedElement');
             }
-            $(e.target).addClass('selectedElement');
-            $('input[name=sensitivity]').val(0);
-            _filteridx++;
-            _filters[_filteridx] = elementTree;
+            $('#sensitivity').val(selectedElementIdx);
+
+            var elementClone = $(_elementTree[selectedElementIdx]).clone().removeClass('selectedElement').filter('[class=""]').removeAttr('class');
+            var elementHtml = $(elementClone)[0].outerHTML; //this doesnt work, problem is that if the element doesnt have any classes after we remove selectedElement, the class attr stays
+            //big no no
+            $('#startmarker').val(elementHtml.substring(0, elementHtml.indexOf('>') + 1)); //get just the declaration tag
+            //just realized this stuff needs to go both ways, if the user enters in a element signature it needs to highlight that element signature if it exists
+            //call this method when click is used
+            //call another method if user types it in
+            //both should set the inUse flag.
+            //need to use custom syntax, say user selects the second p (that has no attributes that make it unique) in a div (that does have unique attributes $(div).length == 1) then prefix the
+            //start marker with something like "<eleminfo child="2" type="p">" so the marker would be "<eleminfo child="2" type="p"><div's unique tag>"
+
         }
 
         if (e.altKey) {
@@ -217,6 +246,15 @@ var FilterControl = (function (window) {
             IframeControl.ChangeSrcDoc(url);
         }
         return;
+    };
+
+    var saveFilter = function (e) {
+        _filters[_filteridx] = _elementTree;
+        _filteridx++;
+    };
+
+    var deleteFilter = function (e) {
+        _elementTree = [];
     };
 
     var doesOverlap = function (element, ignore) {
