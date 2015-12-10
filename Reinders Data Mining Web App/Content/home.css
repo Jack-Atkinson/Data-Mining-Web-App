@@ -192,3 +192,12 @@ input.cmn-toggle-round:checked + label:after {
 .bootstrap-select {
     width: 100% !important;
 }
+
+#sensitivity {
+    display: inline-block;
+}
+
+.checkbox {
+    padding-left: 30px;
+    margin-top: 0;
+}

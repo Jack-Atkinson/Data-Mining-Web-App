@@ -99,14 +99,17 @@ var FilterControl = (function (window) {
     var _filteridx = -1;
 
     var init = function (iframe) {
-        _iframe = iframe;
         hide();
+
+        _iframe = iframe;
+
+        for (var i = 0; i < _filters.length; i++)
+            _filters[i] = 0; //put array into a known state
 
         $(_iframe).load(function () {
             $(_iframe).contents().find("body").click(function (e) {
-                //e.stopImmediatePropagation(); may not be required
                 if ($('#enablefilters').prop('checked'))
-                    filter(e, this);
+                    filter(e);
                 return false;
             });
 
@@ -116,63 +119,70 @@ var FilterControl = (function (window) {
             });
 
             $(_iframe).contents().find("body").mouseover(function (e) {
-                if ($('#enablefilters').prop('checked'))
-                    $(e.target).css('filter', 'invert(100%)');
-                    //$(e.target).css({'outline': '2px solid grey !important', 'filter': 'invert(100%)'});
+                if ($('#enablefilters').prop('checked')) 
+                    $(e.target).css('outline', '2px solid grey', 'important');
             });
             $(_iframe).contents().find("body").mouseout(function (e) {
                 if ($('#enablefilters').prop('checked'))
-                    $(e.target).css('filter', 'invert(0%)'); //get filter working
-                    //$(e.target).css({'outline': '', 'filter': 'invert(0%)'});
+                    $(e.target).css('outline', '');
             });
         });
 
-        for (var i = 0; i < _filters.length; i++)
-            _filters[i] = 0; //put array into a know state
 
-        $('.qtyplus').click(function (e) { //these need to only increment as much as the array's length
-            //e.preventDefault();
-            fieldName = $(this).attr('field');
-            var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+        $('#enablefilters').change(function () {
+            Loading.Start();
+            if ($('#enablefilters').prop('checked'))
+                show();
+            else
+                hide();
+            Loading.End();
+        });
+
+        $('.qtyplus').click(function (e) {
+            var currentVal = parseInt($('#sensitivity').val());
             if (!isNaN(currentVal) && (currentVal + 1) < _filters[_filteridx].length) {
-                $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('input[name=' + fieldName + ']').val(currentVal + 1);
-                $(_filters[_filteridx][currentVal + 1]).addClass('selectedElement');
+                if (!doesOverlap(_filters[_filteridx][currentVal + 1], _filters[_filteridx][currentVal])) { //only need to check this while incrementing I think...debug it
+                    $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
+                    $('#sensitivity').val(currentVal + 1);
+                    $(_filters[_filteridx][currentVal + 1]).addClass('selectedElement');
+                }
             } else {
                 $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('input[name=' + fieldName + ']').val(0); //what if we are on level 4 and I enter in an invalid number, what happens...
+                $('#sensitivity').val(0);
                 $(_filters[_filteridx][0]).addClass('selectedElement');
             }
             return false;
         });
-        // This button will decrement the value till 0
+
         $(".qtyminus").click(function (e) {
-            // e.preventDefault();
-            fieldName = $(this).attr('field');
-            var currentVal = parseInt($('input[name=' + fieldName + ']').val());
+            var currentVal = parseInt($('#sensitivity').val());
             if (!isNaN(currentVal) && currentVal > 0) {
                 $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('input[name=' + fieldName + ']').val(currentVal - 1);
+                $('#sensitivity').val(currentVal - 1);
                 $(_filters[_filteridx][currentVal - 1]).addClass('selectedElement');
             } else {
-                $('input[name=' + fieldName + ']').val(0);
+                $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
+                $('#sensitivity').val(0);
+                $(_filters[_filteridx][0]).addClass('selectedElement');
             }
             return false;
         });
     };
 
-    var filter = function (e, element) {
-        if (e.ctrlKey) {
+    var filter = function (e) {
+        if (e.ctrlKey &&
+            !$(e.target).hasClass('selectedElement') &&
+            !doesOverlap(e.target)) {
             var elementTree = [];
             elementTree.push(e.target);
             $(elementTree).parents().each(function () {
-                elementTree.push(element);
+                elementTree.push(this);
             });
             for (var i = 0; i < elementTree.length; i++) {
                 if ($(elementTree[i]).hasClass('selectedElement')) {
                     (function (i) {
-                        for (var j = 0; j < filters.length; j++)
-                            if (Validate.ArraysAreEqual(filters[j], elementTree)) {
+                        for (var j = 0; j < _filters.length; j++)
+                            if (Validate.ArraysAreEqual(_filters[j], elementTree)) {
                                 _filter.filteridx = j;
                                 $('input[name=sensitivity]').val(i);
                                 return;
@@ -207,6 +217,19 @@ var FilterControl = (function (window) {
             IframeControl.ChangeSrcDoc(url);
         }
         return;
+    };
+
+    var doesOverlap = function (element, ignore) {
+        var ignore = ignore || 0;
+        var children = $(element).find('*').toArray();
+        for (var i = 0; i < children.length; i++) {
+            if (children[i] != ignore &&
+                $(children[i]).hasClass('selectedElement')) {
+                alert('Cannot overlap filters!'); //maybe that could be useful...will have to ask the crew
+                return true;
+            }
+        }
+        return false;
     };
 
     var show = function () {

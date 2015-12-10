@@ -40,18 +40,14 @@
                             <div id="sensitivitycontrol">
                                 <label id="sensitivitylabel" for="sensitivity" class="lfloat">Level Sensitivity:</label>
                                 <div id="sensitivitybuttons" class="lfloat">
-                                    <input type='button' value='-' class='qtyminus' field='sensitivity' />
-                                    <input type='text' name='sensitivity' value='0' class='qty' />
-                                    <input type='button' value='+' class='qtyplus' field='sensitivity' />
+                                    <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='sensitivity' />
+                                    <input type='text' name='sensitivity' id="sensitivity" value='0' class='qty form-control' readonly/>
+                                    <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='sensitivity' />
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="startmarker">Start Marker:</label>
                                 <input name="startmarker" id="startmarker" type="text" class="form-control" />
-                            </div>
-                            <div class="form-group">
-                                <label for="endmarker">End Marker:</label>
-                                <input name="endmarker" id="endmarker" type="text" class="form-control" />
                             </div>
                             <div class="form-group">
                                 <label for="prefix">Prefix:</label>
@@ -61,20 +57,23 @@
                                 <label for="strip">Strip:</label>
                                 <input name="strip" id="strip" type="text" class="form-control" />
                             </div>
-                            <div class="form-group">
-                                <label for="offset">Offset:</label>
-                                <input name="offset" id="offset" type="text" class="form-control" />
+                            <div id="columnselection">
+                                <div class="form-group">
+                                    <label class="lfloat" for="endmarker">Column:</label>
+                                    <div class="checkbox lfloat">
+                                        <label><input type="checkbox" value="">Defined on page</label>
+                                    </div>
+                                    <input name="column" id="column" type="text" class="form-control"/>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label for="endmarker">Column:</label>
-                                <select class="selectpicker">
-                                    <option>Just a test</option>
-                                </select>
+                                <input class="btn btn-default btn-sm" type="button" value="Save"/>
+                                <input class="btn btn-default btn-sm" type="button" value="Delete" />
                             </div>
                         </div>
                         <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
                     </div>
-                    <div id="controlTab">
+                    <div id="controlTab" style="display: none">
                         @using (Html.BeginForm("FileUpload", "Home", 
                 FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
                         {

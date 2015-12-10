@@ -44,13 +44,4 @@ $(document).ready(function () {
         $('#website').css('border', '1px solid orange');
         clearTimeout(timer);
     });
-
-    $('#enablefilters').change(function () {
-        Loading.Start();
-        if ($('#enablefilters').prop('checked'))
-            FilterControl.Show();
-        else
-            FilterControl.Hide();
-        Loading.End();
-    });
 });
