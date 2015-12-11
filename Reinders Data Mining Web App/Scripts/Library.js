@@ -310,6 +310,11 @@ var FilterControl = (function (window) {
             //both should set the inUse flag.
             //need to use custom syntax, say user selects the second p (that has no attributes that make it unique) in a div (that does have unique attributes $(div).length == 1) then prefix the
             //start marker with something like "<eleminfo child="2" type="p">" so the marker would be "<eleminfo child="2" type="p"><div's unique tag>"
+            //or we make it read only
+            
+
+            //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
+            //if user doesnt save filter on screen when filters are turned off, it is never sent to the server to save.
 
         }
 
