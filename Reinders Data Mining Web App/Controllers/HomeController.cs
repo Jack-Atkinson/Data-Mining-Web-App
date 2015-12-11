@@ -52,7 +52,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult FileUpload(HttpPostedFileBase uploadFile)
         {
-            if (uploadFile.ContentLength > 0)
+            if (uploadFile.ContentLength > 0) // null error if no file is selected, fix this
             {
                 string filePath = Path.Combine(HttpContext.Server.MapPath("../Uploads"),
                                                Path.GetFileName(uploadFile.FileName));
