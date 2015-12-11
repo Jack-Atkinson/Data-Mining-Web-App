@@ -19,7 +19,7 @@
         selector +=  '#' + id;
     }
 
-    var classNames = el$.attr('class');
+    var classNames = el$.attr('class'); //problem http://fxl.com/product/lights-incandescent/cm click on text in features, must be a parsing error
     var classSelector;
     if (classNames) {
         classSelector = '.' + $.trim(classNames).replace(/\s/g, '.');
