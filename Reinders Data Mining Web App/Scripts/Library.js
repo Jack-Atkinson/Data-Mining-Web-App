@@ -1,4 +1,69 @@
-﻿var Validate = (function () {
+﻿$.fn.getSelector = function (subSig$) {
+    var el = this[0];
+    if (!el.tagName) {
+        return '';
+    }
+
+    var el$ = $(el);
+    var id = el$.attr('id');
+    var elemsig$ = $('<elemsig />');
+    if (subSig$)
+        elemsig$.append(subSig$);
+
+    elemsig$.attr('tag', el.tagName);
+
+    var selector = el.tagName;
+
+    if (id) {
+        elemsig$.attr('id', id);
+        selector +=  '#' + id;
+    }
+
+    var classNames = el$.attr('class');
+    var classSelector;
+    if (classNames) {
+        classSelector = '.' + $.trim(classNames).replace(/\s/g, '.');
+        elemsig$.attr('class', classSelector); //may want this to be in normal format "class1 class2" instead of selector format ".class1.class2"
+        selector += classSelector;
+    }
+
+    var parent$ = el$.parent();
+    var siblings$ = parent$.children(el.tagName);
+    var isRelative = false;
+
+    if (classSelector && siblings$.filter(selector).length == 1) {
+        // Classes are unique among siblings; use that
+        //selector = classSelector;
+        //we are done, return?
+    } else if (siblings$.filter(el.tagName).length == 1) {
+        // Tag name is unique among siblings; use that
+        //selector = el.tagName;
+        //elemsig$.attr()
+        //we are done, return?
+    } else {
+        // Default to saying "nth child"
+        //selector = ':nth(' + $(this).index() + ')';
+        elemsig$.attr('child', siblings$.index(el));
+        isRelative = true;
+        //we are done
+    }
+
+    elemsig$.attr('relative', isRelative);
+
+    // Bypass ancestors that don't matter
+    if (!isRelative) {
+        for (ancestor$ = parent$.parent() ;
+             ancestor$.length == 1 && ancestor$.find(selector).length == 1;
+             parent$ = ancestor$, ancestor$ = ancestor$.parent());
+        if (ancestor$.length == 0) {
+            return elemsig$;
+        }
+    }
+
+    return parent$.getSelector(elemsig$);
+}
+
+var Validate = (function () {
     var url = function (link) {
         var linkRegexFilter =
             '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
@@ -156,7 +221,7 @@ var FilterControl = (function (window) {
             return false;
         });
 
-        $(".qtyminus").click(function (e) {
+        $(".qtyminus").click(function (e) { //we probably can put these in a function that changes depending on params, ie: add/subtract
             var currentVal = parseInt($('#sensitivity').val());
             if (!isNaN(currentVal) && currentVal > 0) {
                 $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
@@ -170,6 +235,14 @@ var FilterControl = (function (window) {
             return false;
         });
 
+        $('#definedonpage').change(function () {
+            if ($('#definedonpage').prop('checked')) {
+                $('#column').prop('readonly', true);
+            } else {
+                $('#column').prop('readonly', false);
+            }
+        });
+
         $('#savefilter').click(function (e) {
             saveFilter(e);
         });
@@ -180,6 +253,10 @@ var FilterControl = (function (window) {
     };
 
     var filter = function (e) {
+
+        var selector$ = $(e.target).getSelector();
+        console.log(selector$[0].outerHTML);
+        return false;
         if (e.ctrlKey &&
             !$(e.target).hasClass('selectedElement') &&
             !doesOverlap(e.target)) {
@@ -193,13 +270,13 @@ var FilterControl = (function (window) {
                 _elementTree.push(this);
             });
 
-
-
             //Scan elements in hierarchy to see if a parent has already been selected
             var selectedElementIdx = 0;
+            var iterations = 0;
             for (var i = 0; i < _elementTree.length; i++) {
                 if ($(_elementTree[i]).hasClass('selectedElement')) {
                     selectedElementIdx = i;
+                    $('#signature').val($(_elementTree[selectedElementIdx]).data('signature'));
                     (function (i) { //get filteridx of parent with selectedElement
                         for (var j = 0; j < _filters.length; j++)
                             if (Validate.ArraysAreEqual(_filters[j], _elementTree)) {
@@ -210,14 +287,23 @@ var FilterControl = (function (window) {
                     })(selectedElementIdx);
                 }
                 else
-                    $(e.target).addClass('selectedElement');
+                    iterations++;
             }
             $('#sensitivity').val(selectedElementIdx);
 
-            var elementClone = $(_elementTree[selectedElementIdx]).clone().removeClass('selectedElement').filter('[class=""]').removeAttr('class');
-            var elementHtml = $(elementClone)[0].outerHTML; //this doesnt work, problem is that if the element doesnt have any classes after we remove selectedElement, the class attr stays
-            //big no no
-            $('#startmarker').val(elementHtml.substring(0, elementHtml.indexOf('>') + 1)); //get just the declaration tag
+            if (iterations == _elementTree.length) { //didnt find a parent element with the selectedElement class
+                var elementHtml = $(e.target)[0].outerHTML;
+                $(e.target).data('signature', elementHtml.substring(0, elementHtml.indexOf('>') + 1));
+                $('#target').val($(e.target).data('signature'));
+                var test = $(_iframe).contents().find('div#left.textBlock').length;
+                var signature =
+                    $(e.target).prop('nodeName') +
+                    "#" + $(e.target).prop('id') +
+                    "." + $(e.target).prop('class');
+                var test = $(_iframe).contents().find(signature).length;
+                $(e.target).addClass('selectedElement');
+            }
+
             //just realized this stuff needs to go both ways, if the user enters in a element signature it needs to highlight that element signature if it exists
             //call this method when click is used
             //call another method if user types it in
@@ -234,6 +320,7 @@ var FilterControl = (function (window) {
     };
 
     var browse = function (e, element) {
+        $('#website').css('border', '1px solid orange');
         var url = $(element).attr("href");
         if (url.charAt(0) == '#' || url == "") //change this to get the full url instead
             return;
