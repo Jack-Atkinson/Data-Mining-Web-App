@@ -22,7 +22,7 @@
     var classNames = el$.attr('class'); //problem http://fxl.com/product/lights-incandescent/cm click on text in features, must be a parsing error
     var classSelector;
     if (classNames) {
-        classSelector = '.' + $.trim(classNames).replace(/\s/g, '.');
+        classSelector = '.' + $.trim(classNames).replace(/\s+/g, '.');
         elemsig$.attr('class', classSelector); //may want this to be in normal format "class1 class2" instead of selector format ".class1.class2"
         selector += classSelector;
     }
@@ -106,7 +106,7 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
 
     var init = function (iframe, url) {
         _iframe = iframe || alert("")
-        url = url || "http://www.reinders.com"; //just a default for now
+        url = url || "https://www.reinders.com"; //just a default for now
         changeSrcDoc(url);
     };
 
@@ -121,11 +121,13 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             if (srcDoc == "invalid") {
                 $('#website').css('border', '1px solid red');
                 Loading.End();
+                alert("The server did not return valid HTML");
                 return;
             }
             $('#website').css('border', '1px solid green');
             _url = url;
             $(_iframe).attr("srcdoc", srcDoc);
+
             Loading.End();
             return;
         });
@@ -236,10 +238,14 @@ var FilterControl = (function (window) {
         });
 
         $('#definedonpage').change(function () {
-            if ($('#definedonpage').prop('checked')) {
-                $('#column').prop('readonly', true);
-            } else {
-                $('#column').prop('readonly', false);
+            if ($('#signature').val().length > 0)
+                if ($('#definedonpage').prop('checked'))
+                    $('#column').prop('readonly', true);
+                else
+                    $('#column').prop('readonly', false);
+            else {
+                alert("You must selected a main signature before you can select a custom column");
+                $('#definedonpage').prop('checked', false);
             }
         });
 
@@ -256,10 +262,9 @@ var FilterControl = (function (window) {
 
         var selector$ = $(e.target).getSelector();
         console.log(selector$[0].outerHTML);
-        return false;
         if (e.ctrlKey &&
-            !$(e.target).hasClass('selectedElement') &&
             !doesOverlap(e.target)) {
+
             _inUse = true;
             $(e.target).trigger("mouseout"); //get rid of our outline
 
@@ -271,55 +276,49 @@ var FilterControl = (function (window) {
             });
 
             //Scan elements in hierarchy to see if a parent has already been selected
-            var selectedElementIdx = 0;
+            var _filteridx = 0;
             var iterations = 0;
             for (var i = 0; i < _elementTree.length; i++) {
                 if ($(_elementTree[i]).hasClass('selectedElement')) {
-                    selectedElementIdx = i;
-                    $('#signature').val($(_elementTree[selectedElementIdx]).data('signature'));
-                    (function (i) { //get filteridx of parent with selectedElement
+                    _filteridx = i;
+                    $('#signature').val($(_elementTree[_filteridx]).data('signature'));
+                    (function () { //get filteridx of parent with selectedElement
                         for (var j = 0; j < _filters.length; j++)
                             if (Validate.ArraysAreEqual(_filters[j], _elementTree)) {
                                 _filteridx = j;
                                 return;
                             }
                         return;
-                    })(selectedElementIdx);
+                    })();
                 }
                 else
                     iterations++;
             }
-            $('#sensitivity').val(selectedElementIdx);
+            $('#sensitivity').val(_filteridx);
 
             if (iterations == _elementTree.length) { //didnt find a parent element with the selectedElement class
-                var elementHtml = $(e.target)[0].outerHTML;
-                $(e.target).data('signature', elementHtml.substring(0, elementHtml.indexOf('>') + 1));
-                $('#target').val($(e.target).data('signature'));
-                var test = $(_iframe).contents().find('div#left.textBlock').length;
-                var signature =
-                    $(e.target).prop('nodeName') +
-                    "#" + $(e.target).prop('id') +
-                    "." + $(e.target).prop('class');
-                var test = $(_iframe).contents().find(signature).length;
+                try {
+                    var selector$ = $(e.target).getSelector();
+                } catch (err) {
+                    alert(err);
+                }
+                $(e.target).data('signature', selector$[0].outerHTML);
+                $('#signature').val($(e.target).data('signature'));
                 $(e.target).addClass('selectedElement');
             }
-
-            //just realized this stuff needs to go both ways, if the user enters in a element signature it needs to highlight that element signature if it exists
-            //call this method when click is used
-            //call another method if user types it in
-            //both should set the inUse flag.
-            //need to use custom syntax, say user selects the second p (that has no attributes that make it unique) in a div (that does have unique attributes $(div).length == 1) then prefix the
-            //start marker with something like "<eleminfo child="2" type="p">" so the marker would be "<eleminfo child="2" type="p"><div's unique tag>"
-            //or we make it read only
-            
 
             //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
             //if user doesnt save filter on screen when filters are turned off, it is never sent to the server to save.
 
         }
 
-        if (e.altKey) {
+        if (e.altKey) { //first check if it's even in elementTree first
+
+            var selector$ = $.parseHTML($('#signature').val());
+
+
             $(e.target).addClass('deletedElement');
+
         }
         return;
     };
@@ -343,11 +342,27 @@ var FilterControl = (function (window) {
     var saveFilter = function (e) {
         _filters[_filteridx] = _elementTree;
         _filteridx++;
+        cleanUp();
     };
 
     var deleteFilter = function (e) {
-        _elementTree = [];
+        for (var i = 0; i < _elementTree.length; i++) {
+            if ($(_elementTree[i]).hasClass('selectedElement'))
+                $(_elementTree[i]).removeClass('selectedElement');
+        }
+        cleanUp();
     };
+
+    var cleanUp = function () {
+        _elementTree = [];
+        $('#signature').val('');
+        $('#prefix').val('');
+        $('#strip').val('');
+        $('#definedonpage').prop('checked', false);
+        $('#column').prop('readonly', false);
+        $('column').val('');
+        _inUse = false;
+    }
 
     var doesOverlap = function (element, ignore) {
         var ignore = ignore || 0;

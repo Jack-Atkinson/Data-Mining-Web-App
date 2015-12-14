@@ -39,13 +39,19 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             HtmlDocument htmlDoc = new HtmlDocument(); //urgh sooo ugly
             htmlDoc.LoadHtml(source);
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
-            string newBaseContent = string.Format("<base href='http://{0}'/>", socket.Host);
-            string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
-            HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
-            HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
-            head.PrependChild(newBase);
-            head.PrependChild(newCssLink);
-            source = htmlDoc.DocumentNode.InnerHtml;
+            if(head != null)
+            {
+                string newBaseContent = string.Format("<base href='http://{0}'/>", socket.Host);
+                string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
+                HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
+                HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
+                head.PrependChild(newBase);
+                head.PrependChild(newCssLink);
+                source = htmlDoc.DocumentNode.InnerHtml;
+            } else
+            {
+                source = "invalid";
+            }
             return Json(source, JsonRequestBehavior.AllowGet);
         }
 
