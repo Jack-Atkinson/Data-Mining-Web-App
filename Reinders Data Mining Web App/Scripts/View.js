@@ -33,15 +33,26 @@ $(document).ready(function () {
     var timer;
     var typingInterval = 1000;
 
-    $('#website').keyup(function () {
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-            IframeControl.ChangeSrcDoc($('#website').val())
-        }, typingInterval);
+    $('#website').bind({
+        keyup: function (e) {
+            clearTimeout(timer);
+            if (e.which == 13) {
+                IframeControl.ChangeSrcDoc($('#website').val());
+            } else {
+                timer = setTimeout(function () {
+                    IframeControl.ChangeSrcDoc($('#website').val())
+                }, typingInterval);
+            }
+        },
+        keydown: function () {
+            $('#website').css('border', '1px solid orange');
+            clearTimeout(timer);
+        }
     });
 
-    $('#website').keydown(function () {
-        $('#website').css('border', '1px solid orange');
-        clearTimeout(timer);
+    $('#refresh').click(function () {
+        IframeControl.Refresh();
     });
+
+    $('#switch-off').prop('checked', true);
 });

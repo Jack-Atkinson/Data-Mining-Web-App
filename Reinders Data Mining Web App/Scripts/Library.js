@@ -152,10 +152,14 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
 
     };
 
+    var refresh = function () {
+        changeSrcDoc(_url);
+    }
 
     return {
         Init: init,
         ChangeSrcDoc: changeSrcDoc,
+        Refresh: refresh,
     };
 
 })();
@@ -177,34 +181,45 @@ var FilterControl = (function (window) {
 
         $(_iframe).load(function () {
             $(_iframe).contents().find("body").click(function (e) {
-                if ($('#enablefilters').prop('checked') && !_inUse)
+                if ($('#switch-on').prop('checked') && !_inUse)
                     filter(e);
                 return false;
             });
 
             $(_iframe).contents().find("a").click(function (e) {
-                if (!$('#enablefilters').prop('checked'))
+                if (!$('#switch-on').prop('checked'))
                     browse(e, this);
+                return false;
             });
 
             $(_iframe).contents().find("body").mouseover(function (e) {
-                if ($('#enablefilters').prop('checked') && !_inUse)
+                if ($('#switch-on').prop('checked') && !_inUse)
                     $(e.target).css('outline', '2px solid grey', 'important');
             });
             $(_iframe).contents().find("body").mouseout(function (e) {
-                if ($('#enablefilters').prop('checked')) //doesnt need to check if in use
+                if ($('#switch-on').prop('checked')) //doesnt need to check if in use
                     $(e.target).css('outline', '');
             });
         });
 
 
-        $('#enablefilters').change(function () {
+        $('#switch-on, #switch-off').change(function () {
             Loading.Start();
-            if ($('#enablefilters').prop('checked'))
+            if ($('#switch-on').prop('checked')) {
+                $('.switch').css('background', 'green');
                 show();
-            else
+            } else {
+                $('.switch').css('background', '#808080');
                 hide();
+            }
             Loading.End();
+        });
+
+        $('#disablejs').change(function () {
+            if ($('#disablejs').prop('checked'))
+                $(_iframe).attr('sandbox', 'allow=forms allow-pointer-lock allow-popups allow-same-origin allow-top-navigation');
+            else
+                $(_iframe).removeAttr('sandbox');
         });
 
         $('.qtyplus').click(function (e) {
@@ -250,7 +265,11 @@ var FilterControl = (function (window) {
         });
 
         $('#savefilter').click(function (e) {
-            saveFilter(e);
+            if ($('#signature').val().length > 0 &&
+                $('#column').val().length > 0)
+                saveFilter(e);
+            else
+                alert('You must select a filter and assign it a column before you can save it!');
         });
 
         $('#deletefilter').click(function (e) {

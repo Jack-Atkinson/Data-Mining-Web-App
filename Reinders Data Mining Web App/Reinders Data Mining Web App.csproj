@@ -150,6 +150,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\core.css" />
     <Content Include="Content\imgs\shared\hex-loader2.gif" />
+    <Content Include="Content\imgs\shared\refresh.png" />
     <Content Include="Content\imgs\shared\reindersLogo.png" />
     <Content Include="Content\remote.css" />
     <Content Include="favicon.ico" />

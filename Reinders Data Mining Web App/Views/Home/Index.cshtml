@@ -7,6 +7,7 @@
     @Styles.Render("~/Content/home")
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
 </head>
 <body>
     <div class="main-view">
@@ -17,7 +18,11 @@
                 </div>
                 <div id="urlentry" class="form-group">
                     <label for="website">Website:</label>
+                    <div class="checkbox rfloat">
+                        <label><input id="disablejs" type="checkbox" />Disable Javascript</label>
+                    </div>
                     <input name="website" id="website" type="text" class="form-control" />
+                    <button id="refresh" class="btn btn-default btn-sm"><img src="~/Content/imgs/shared/refresh.png" alt="Refresh" width="24px" height="24px"/></button>
                 </div>
                 <ul id="tabSelection">
                     <li id="functionTabLink">
@@ -31,18 +36,23 @@
                     <div id="functionTab">
                         <div id="filterswitch"> <!--Must change these ID's to their new meaning!-->
                             <label class="lfloat">Filter:</label>
-                            <div class="switch lfloat">
-                                <input id="enablefilters" class="cmn-toggle cmn-toggle-round" type="checkbox">
-                                <label for="enablefilters"></label>
-                            </div>
+                            <div class="switchcontainer">
+                                <div class="switch">
+                                    <input type="radio" name="switch" id="switch-off" />
+                                    <input type="radio" name="switch" id="switch-on"/>
+                                    <span class="toggle"></span>
+                                </div> <!-- end switch -->
+                            </div> <!-- end container -->
                         </div>
                         <div id="filtercontrols" style="display: none;">
-                            <div id="sensitivitycontrol">
-                                <label id="sensitivitylabel" for="sensitivity" class="lfloat">Level Sensitivity:</label>
-                                <div id="sensitivitybuttons" class="lfloat">
-                                    <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='sensitivity' />
-                                    <input type='text' name='sensitivity' id="sensitivity" value='0' class='qty form-control' readonly/>
-                                    <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='sensitivity' />
+                            <div class="form-group">
+                                <div id="sensitivitycontrol">
+                                    <label id="sensitivitylabel" for="sensitivity">Level Sensitivity:</label>
+                                    <div id="sensitivitybuttons" class="rfloat">
+                                        <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='sensitivity' />
+                                        <input type='text' name='sensitivity' id="sensitivity" value='0' class='qty form-control' readonly />
+                                        <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='sensitivity' />
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -60,8 +70,8 @@
                             <div id="columnselection">
                                 <div class="form-group">
                                     <label class="lfloat" for="endmarker">Column:</label>
-                                    <div class="checkbox lfloat">
-                                        <label><input id="definedonpage" type="checkbox" value="">Defined on page</label>
+                                    <div class="checkbox rfloat">
+                                        <label><input id="definedonpage" type="checkbox">Defined on page</label>
                                     </div>
                                     <input name="column" id="column" type="text" class="form-control"/>
                                 </div>
@@ -84,7 +94,7 @@
                 </div>
             </div>
             <div class="target-renderer lfloat">
-                <iframe id="target-frame" srcdoc="" sandbox="allow-scripts"></iframe>
+                <iframe id="target-frame" srcdoc=""></iframe> <!--Maybe add an option to load a page without javascript, program will still work the display page will just look nasty-->
             </div>
         </section>
         <div class="footer">
