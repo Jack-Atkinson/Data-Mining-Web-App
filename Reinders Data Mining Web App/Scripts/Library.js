@@ -166,20 +166,16 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
 
 var FilterControl = (function (window) {
     var _iframe = {};
-    var _filters = new Array(30);
-    var _filteridx = 0;
+    var _elementTree = [];
     var _inUse = false;
-    var _elementTree = []
 
     var init = function (iframe) {
+
         hide();
 
         _iframe = iframe;
 
-        for (var i = 0; i < _filters.length; i++)
-            _filters[i] = 0; //put array into a known state
-
-        $(_iframe).load(function () {
+        $(_iframe).load(function () { //hook the iframe contents, put a hook in here that whenever new source is gathered, load the page through the filters to highlight elements that would be selected
             $(_iframe).contents().find("body").click(function (e) {
                 if ($('#switch-on').prop('checked') && !_inUse)
                     filter(e);
@@ -187,23 +183,28 @@ var FilterControl = (function (window) {
             });
 
             $(_iframe).contents().find("a").click(function (e) {
-                if (!$('#switch-on').prop('checked'))
+                if (!$('#switch-on').prop('checked')) {
                     browse(e, this);
-                return false;
+                    return false;
+                }
             });
 
             $(_iframe).contents().find("body").mouseover(function (e) {
-                if ($('#switch-on').prop('checked') && !_inUse)
+                if ($('#switch-on').prop('checked') && !_inUse) {
                     $(e.target).css('outline', '2px solid grey', 'important');
+                    return false;
+                }
             });
             $(_iframe).contents().find("body").mouseout(function (e) {
-                if ($('#switch-on').prop('checked')) //doesnt need to check if in use
+                if ($('#switch-on').prop('checked')) {
                     $(e.target).css('outline', '');
+                    return false;
+                }
             });
         });
 
 
-        $('#switch-on, #switch-off').change(function () {
+        $('#switch-on, #switch-off').change(function () { //ugly
             Loading.Start();
             if ($('#switch-on').prop('checked')) {
                 $('.switch').css('background', 'green');
@@ -222,7 +223,7 @@ var FilterControl = (function (window) {
                 $(_iframe).removeAttr('sandbox');
         });
 
-        $('.qtyplus').click(function (e) {
+        /*$('.qtyplus').click(function (e) { //super ugly
             var currentVal = parseInt($('#sensitivity').val());
             if (!isNaN(currentVal) && (currentVal + 1) < _filters[_filteridx].length) {
                 if (!doesOverlap(_filters[_filteridx][currentVal + 1], _filters[_filteridx][currentVal])) { //only need to check this while incrementing I think...debug it
@@ -250,7 +251,7 @@ var FilterControl = (function (window) {
                 $(_filters[_filteridx][0]).addClass('selectedElement');
             }
             return false;
-        });
+        });*/
 
         $('#definedonpage').change(function () {
             if ($('#signature').val().length > 0)
@@ -278,60 +279,36 @@ var FilterControl = (function (window) {
     };
 
     var filter = function (e) {
-
-        var selector$ = $(e.target).getSelector();
-        console.log(selector$[0].outerHTML);
         if (e.ctrlKey &&
             !doesOverlap(e.target)) {
 
             _inUse = true;
-            $(e.target).trigger("mouseout"); //get rid of our outline
-
+            $(e.target).trigger("mouseout"); //get rid of our outline, double check this actually works...
+            $('#level').val(0);
             //generate element hierarchy 
-            _elementTree = []; 
-            _elementTree.push(e.target);
-            $(_elementTree).parents().each(function () {
-                _elementTree.push(this);
-            });
+            getHierarchy(e.target);
 
             //Scan elements in hierarchy to see if a parent has already been selected
             var _filteridx = 0;
-            var iterations = 0;
             for (var i = 0; i < _elementTree.length; i++) {
                 if ($(_elementTree[i]).hasClass('selectedElement')) {
-                    _filteridx = i;
-                    $('#signature').val($(_elementTree[_filteridx]).data('signature'));
-                    (function () { //get filteridx of parent with selectedElement
-                        for (var j = 0; j < _filters.length; j++)
-                            if (Validate.ArraysAreEqual(_filters[j], _elementTree)) {
-                                _filteridx = j;
-                                return;
-                            }
-                        return;
-                    })();
+                    $('#signature').val($(_elementTree[i]).data('signature'));
+                    grabFilter();
+                    return;
                 }
-                else
-                    iterations++;
             }
-            $('#sensitivity').val(_filteridx);
 
-            if (iterations == _elementTree.length) { //didnt find a parent element with the selectedElement class
-                try {
-                    var selector$ = $(e.target).getSelector();
-                } catch (err) {
-                    alert(err);
-                }
-                $(e.target).data('signature', selector$[0].outerHTML);
-                $('#signature').val($(e.target).data('signature'));
-                $(e.target).addClass('selectedElement');
-            }
+            var selector$ = $(e.target).getSelector();
+            $(e.target).data('signature', selector$[0].outerHTML);
+            $('#signature').val($(e.target).data('signature'));
+            $(e.target).addClass('selectedElement');
 
             //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
             //if user doesnt save filter on screen when filters are turned off, it is never sent to the server to save.
 
         }
 
-        if (e.altKey) { //first check if it's even in elementTree first
+        if (e.altKey) { //first check if it's even a child of a selectedElement
 
             var selector$ = $.parseHTML($('#signature').val());
 
@@ -359,10 +336,33 @@ var FilterControl = (function (window) {
     };
 
     var saveFilter = function (e) {
-        _filters[_filteridx] = _elementTree;
-        _filteridx++;
+        //_filters[_filteridx] = _elementTree;
+        //_filteridx++;
+        $.ajax({
+            url: '/Home/AddFilter',
+            method: 'GET',
+            dataType: 'json',
+            data: {
+                signature: $('#signature').val(),
+                prefix: $('#prefix').val(),
+                strip: $('#strip').val(),
+                column: $('#column').val()
+            },
+            success: function (srcDoc) {
+                callback(srcDoc);
+            },
+            error: function (xhr, status, error) {
+                var err = eval("(" + xhr.responseText + ")");
+                alert(err.Message);
+                callback("invalid");
+            }
+        });
         cleanUp();
     };
+
+    var grabFilter = function () { //this sends the value in #signature to the server and then gets back prefix/strip/column if it exists
+
+    }
 
     var deleteFilter = function (e) {
         for (var i = 0; i < _elementTree.length; i++) {
@@ -379,8 +379,16 @@ var FilterControl = (function (window) {
         $('#strip').val('');
         $('#definedonpage').prop('checked', false);
         $('#column').prop('readonly', false);
-        $('column').val('');
+        $('#column').val('');
         _inUse = false;
+    }
+
+    var getHierarchy = function (target) {
+        _elementTree = [];
+        _elementTree.push(target);
+        $(_elementTree).parents().each(function () {
+            _elementTree.push(this);
+        });
     }
 
     var doesOverlap = function (element, ignore) {
@@ -395,6 +403,10 @@ var FilterControl = (function (window) {
         }
         return false;
     };
+
+    var elemSigToSelector = function (elemsig) {
+
+    }
 
     var show = function () {
         $('#filtercontrols').show();

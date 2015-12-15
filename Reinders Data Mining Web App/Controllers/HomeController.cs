@@ -55,6 +55,13 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return Json(source, JsonRequestBehavior.AllowGet);
         }
 
+        public JsonResult AddFilter(string signature, string prefix,
+                                    string strip, string column)
+        {
+
+            return Json(true, JsonRequestBehavior.AllowGet);
+        }
+
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult FileUpload(HttpPostedFileBase uploadFile)
         {

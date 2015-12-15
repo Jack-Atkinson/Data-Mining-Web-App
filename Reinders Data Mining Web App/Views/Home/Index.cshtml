@@ -22,7 +22,7 @@
                         <label><input id="disablejs" type="checkbox" />Disable Javascript</label>
                     </div>
                     <input name="website" id="website" type="text" class="form-control" />
-                    <button id="refresh" class="btn btn-default btn-sm"><img src="~/Content/imgs/shared/refresh.png" alt="Refresh" width="24px" height="24px"/></button>
+                    <button id="refresh" class="btn btn-default btn-sm"><img src="~/Content/imgs/shared/refresh.png" alt="Refresh" width="24px" height="24px"/></button> <!--little too big-->
                 </div>
                 <ul id="tabSelection">
                     <li id="functionTabLink">
@@ -35,7 +35,7 @@
                 <div id="tabControl">
                     <div id="functionTab">
                         <div id="filterswitch"> <!--Must change these ID's to their new meaning!-->
-                            <label class="lfloat">Filter:</label>
+                            <label class="lfloat">Enable Filter:</label>
                             <div class="switchcontainer">
                                 <div class="switch">
                                     <input type="radio" name="switch" id="switch-off" />
@@ -46,12 +46,12 @@
                         </div>
                         <div id="filtercontrols" style="display: none;">
                             <div class="form-group">
-                                <div id="sensitivitycontrol">
-                                    <label id="sensitivitylabel" for="sensitivity">Level Sensitivity:</label>
-                                    <div id="sensitivitybuttons" class="rfloat">
-                                        <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='sensitivity' />
-                                        <input type='text' name='sensitivity' id="sensitivity" value='0' class='qty form-control' readonly />
-                                        <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='sensitivity' />
+                                <div id="levelcontrol">
+                                    <label id="levellabel" for="level">Level:</label>
+                                    <div id="levelbuttons" class="rfloat">
+                                        <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='level' />
+                                        <input type='text' name='level' id="level" value='0' class='qty form-control' readonly />
+                                        <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='level' />
                                     </div>
                                 </div>
                             </div>

@@ -101,33 +101,33 @@
     border: 0;
 }
 
-#sensitivitycontrol {
+#levelcontrol {
     margin-bottom: 15px;
 }
 
-#sensitivitybuttons {
+#levelbuttons {
     display: inline-block;
 }
 
-#sensitivitylabel {
+#levellabel {
     margin: 0;
     line-height: 25px;
 }
 
-#sensitivitybuttons .qty {
+#levelbuttons .qty {
     width: 40px;
     height: 25px;
     text-align: center;
 }
 
-#sensitivitybuttons .qtyplus { width:25px; height:25px;}
-#sensitivitybuttons .qtyminus { width:25px; height:25px;}
+#levelbuttons .qtyplus { width:25px; height:25px;}
+#levelbuttons .qtyminus { width:25px; height:25px;}
 
 .bootstrap-select {
     width: 100% !important;
 }
 
-#sensitivity {
+#level {
     display: inline-block;
 }
 
