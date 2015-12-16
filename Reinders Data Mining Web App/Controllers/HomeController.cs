@@ -7,6 +7,7 @@ using Reinders_Data_Mining_Web_App.Models;
 using Reinders_Data_Mining_Web_App.Library;
 using System.IO;
 using HtmlAgilityPack;
+using System.Threading.Tasks;
 
 namespace Reinders_Data_Mining_Web_App.Controllers
 {
@@ -41,7 +42,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             if(head != null)
             {
-                string newBaseContent = string.Format("<base href='http://{0}'/>", socket.Host);
+                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", socket.Host);
                 string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
                 HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
                 HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
@@ -55,12 +56,16 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return Json(source, JsonRequestBehavior.AllowGet);
         }
 
-        public JsonResult AddFilter(string signature, string prefix,
+        /*[AcceptVerbs(HttpVerbs.Post), ValidateInput(false)] //D-D-D-DANGEROUS
+        public ActionResult AddFilter(string signature, string prefix,
                                     string strip, string column)
         {
+            bool didWork = false;
 
-            return Json(true, JsonRequestBehavior.AllowGet);
-        }
+            
+
+            return Json(didWork, JsonRequestBehavior.AllowGet);
+        }*/
 
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult FileUpload(HttpPostedFileBase uploadFile)
@@ -73,5 +78,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             }
             return RedirectToAction("Index");
         }
+
+
     }
 }

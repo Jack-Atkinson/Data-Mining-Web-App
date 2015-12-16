@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reinders Data Mining Web App", "Reinders Data Mining Web App\Reinders Data Mining Web App.csproj", "{DAF31BB0-5B6D-4B66-84AD-BBBC6CBC5360}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reinders Data Mining Web App.Tests", "Reinders Data Mining Web App.Tests\Reinders Data Mining Web App.Tests.csproj", "{E8510789-B2BE-4AAC-9914-7F99ED6EFFCC}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{DAF31BB0-5B6D-4B66-84AD-BBBC6CBC5360}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAF31BB0-5B6D-4B66-84AD-BBBC6CBC5360}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAF31BB0-5B6D-4B66-84AD-BBBC6CBC5360}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E8510789-B2BE-4AAC-9914-7F99ED6EFFCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E8510789-B2BE-4AAC-9914-7F99ED6EFFCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E8510789-B2BE-4AAC-9914-7F99ED6EFFCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E8510789-B2BE-4AAC-9914-7F99ED6EFFCC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

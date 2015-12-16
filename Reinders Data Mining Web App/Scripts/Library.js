@@ -20,10 +20,10 @@
     }
 
     var classNames = el$.attr('class'); //problem http://fxl.com/product/lights-incandescent/cm click on text in features, must be a parsing error
-    var classSelector;
+    //var classSelector;
     if (classNames) {
         classSelector = '.' + $.trim(classNames).replace(/\s+/g, '.');
-        elemsig$.attr('class', classSelector); //may want this to be in normal format "class1 class2" instead of selector format ".class1.class2"
+        elemsig$.attr('class', classNames); //may want this to be in normal format "class1 class2" instead of selector format ".class1.class2"
         selector += classSelector;
     }
 
@@ -31,7 +31,7 @@
     var siblings$ = parent$.children(el.tagName);
     var isRelative = false;
 
-    if (classSelector && siblings$.filter(selector).length == 1) {
+    if (siblings$.filter(selector).length == 1) {
         // Classes are unique among siblings; use that
         //selector = classSelector;
         //we are done, return?
@@ -61,6 +61,39 @@
     }
 
     return parent$.getSelector(elemsig$);
+}
+$.fn.elemSigToSelector = function (selector) {
+
+    var elemsig = this[0];
+    if (!elemsig.tagName) {
+        return selector;
+    }
+
+    var elemsig$ = $(elemsig);
+
+    if (selector)
+        selector += ' ';
+    else
+        selector = '';
+
+    selector += elemsig$.attr('tag');
+    if (elemsig$.attr('id'))
+        selector += '#' + elemsig$.attr('id');
+
+    if (elemsig$.attr('class')) {
+        classSelector = '.' + $.trim(elemsig$.attr('class')).replace(/\s+/g, '.');
+        selector += classSelector;
+    }
+
+    if (elemsig$.attr('child'))
+        selector += ':eq(' + elemsig$.attr('child') + ')';
+
+    if (elemsig$.children().length == 0)
+        return selector;
+    var test = elemsig$.children()[0];
+
+    return $(elemsig$.children()[0]).elemSigToSelector(selector);
+
 }
 
 var Validate = (function () {
@@ -117,6 +150,7 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             Loading.End();
             return;
         }
+
         getSource(url, function (srcDoc) {
             if (srcDoc == "invalid") {
                 $('#website').css('border', '1px solid red');
@@ -127,7 +161,6 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             $('#website').css('border', '1px solid green');
             _url = url;
             $(_iframe).attr("srcdoc", srcDoc);
-
             Loading.End();
             return;
         });
@@ -218,40 +251,42 @@ var FilterControl = (function (window) {
 
         $('#disablejs').change(function () {
             if ($('#disablejs').prop('checked'))
-                $(_iframe).attr('sandbox', 'allow=forms allow-pointer-lock allow-popups allow-same-origin allow-top-navigation');
+                $(_iframe).attr('sandbox', 'allow=forms allow-pointer-lock allow-popups allow-same-origin allow-scripts'); //allowed scripts for tests
             else
                 $(_iframe).removeAttr('sandbox');
         });
 
-        /*$('.qtyplus').click(function (e) { //super ugly
-            var currentVal = parseInt($('#sensitivity').val());
-            if (!isNaN(currentVal) && (currentVal + 1) < _filters[_filteridx].length) {
-                if (!doesOverlap(_filters[_filteridx][currentVal + 1], _filters[_filteridx][currentVal])) { //only need to check this while incrementing I think...debug it
-                    $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                    $('#sensitivity').val(currentVal + 1);
-                    $(_filters[_filteridx][currentVal + 1]).addClass('selectedElement');
+        $('.qtyplus').click(function (e) { //super ugly
+            var currentVal = parseInt($('#level').val());
+            if (!isNaN(currentVal) && (currentVal + 1) < _elementTree.length) {
+                $(_elementTree[currentVal]).removeClass('selectedElement');
+                if (!doesOverlap(_elementTree[currentVal + 1])) { //only need to check this while incrementing I think...debug it
+                    $('#level').val(currentVal + 1);
+                    $(_elementTree[currentVal + 1]).addClass('selectedElement');
+                } else {
+                    $(_elementTree[currentVal]).addClass('selectedElement');
                 }
             } else {
-                $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('#sensitivity').val(0);
-                $(_filters[_filteridx][0]).addClass('selectedElement');
+                $(_elementTree[currentVal]).removeClass('selectedElement');
+                $('#level').val(0);
+                $(_elementTree[0]).addClass('selectedElement');
             }
             return false;
         });
 
         $(".qtyminus").click(function (e) { //we probably can put these in a function that changes depending on params, ie: add/subtract
-            var currentVal = parseInt($('#sensitivity').val());
+            var currentVal = parseInt($('#level').val());
             if (!isNaN(currentVal) && currentVal > 0) {
-                $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('#sensitivity').val(currentVal - 1);
-                $(_filters[_filteridx][currentVal - 1]).addClass('selectedElement');
+                $(_elementTree[currentVal]).removeClass('selectedElement');
+                $('#level').val(currentVal - 1);
+                $(_elementTree[currentVal - 1]).addClass('selectedElement');
             } else {
-                $(_filters[_filteridx][currentVal]).removeClass('selectedElement');
-                $('#sensitivity').val(0);
-                $(_filters[_filteridx][0]).addClass('selectedElement');
+                $(_elementTree[currentVal]).removeClass('selectedElement');
+                $('#level').val(0);
+                $(_elementTree[0]).addClass('selectedElement');
             }
             return false;
-        });*/
+        });
 
         $('#definedonpage').change(function () {
             if ($('#signature').val().length > 0)
@@ -284,21 +319,22 @@ var FilterControl = (function (window) {
 
             _inUse = true;
             $(e.target).trigger("mouseout"); //get rid of our outline, double check this actually works...
-            $('#level').val(0);
             //generate element hierarchy 
-            getHierarchy(e.target);
 
             //Scan elements in hierarchy to see if a parent has already been selected
             var _filteridx = 0;
             for (var i = 0; i < _elementTree.length; i++) {
                 if ($(_elementTree[i]).hasClass('selectedElement')) {
                     $('#signature').val($(_elementTree[i]).data('signature'));
+                    getHierarchy(_elementTree[i]);
                     grabFilter();
                     return;
                 }
             }
-
+            getHierarchy(e.target);
             var selector$ = $(e.target).getSelector();
+            var test$ = $.parseHTML(selector$[0].outerHTML);
+            var source = $(test$).elemSigToSelector();
             $(e.target).data('signature', selector$[0].outerHTML);
             $('#signature').val($(e.target).data('signature'));
             $(e.target).addClass('selectedElement');
@@ -335,21 +371,29 @@ var FilterControl = (function (window) {
         return;
     };
 
-    var saveFilter = function (e) {
+    var saveFilter = function (e) { //check if level changed and if it did just delete the old filter on the server and replace it with the new one
         //_filters[_filteridx] = _elementTree;
         //_filteridx++;
+        var signature = $('#signature').val();
+        var prefix = $('#prefix').val();
+        var strip = $('#strip').val();
+        var column = $('#column').val();
+        var domain = $($('#target-frame').contents().find('#basedomain')).attr('href');
+        
+
         $.ajax({
-            url: '/Home/AddFilter',
-            method: 'GET',
+            url: '/Filters/Create',
+            method: 'POST',
             dataType: 'json',
             data: {
-                signature: $('#signature').val(),
-                prefix: $('#prefix').val(),
-                strip: $('#strip').val(),
-                column: $('#column').val()
+                'signature': signature,
+                'prefix': prefix,
+                'strip': strip ,
+                'column': column,
+                'domain': domain,
             },
-            success: function (srcDoc) {
-                callback(srcDoc);
+            success: function (response) {
+                alert(response);
             },
             error: function (xhr, status, error) {
                 var err = eval("(" + xhr.responseText + ")");
@@ -384,6 +428,7 @@ var FilterControl = (function (window) {
     }
 
     var getHierarchy = function (target) {
+        $('#level').val(0);
         _elementTree = [];
         _elementTree.push(target);
         $(_elementTree).parents().each(function () {
@@ -404,9 +449,7 @@ var FilterControl = (function (window) {
         return false;
     };
 
-    var elemSigToSelector = function (elemsig) {
 
-    }
 
     var show = function () {
         $('#filtercontrols').show();
