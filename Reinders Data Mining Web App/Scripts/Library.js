@@ -1,99 +1,55 @@
-﻿$.fn.getSelector = function (subSig$) {
+﻿$.fn.getSelector = function () {
+    //http://www.timvasil.com/blog14/post/2014/02/24/Build-a-unique-selector-for-any-DOM-element-using-jQuery.aspx with minor changes
+
     var el = this[0];
     if (!el.tagName) {
         return '';
     }
 
+    // If we have an ID, we're done; that uniquely identifies this element
     var el$ = $(el);
     var id = el$.attr('id');
-    var elemsig$ = $('<elemsig />');
-    if (subSig$)
-        elemsig$.append(subSig$);
-
-    elemsig$.attr('tag', el.tagName);
-
-    var selector = el.tagName;
-
     if (id) {
-        elemsig$.attr('id', id);
-        selector +=  '#' + id;
+        return '#' + id;
     }
 
-    var classNames = el$.attr('class'); //problem http://fxl.com/product/lights-incandescent/cm click on text in features, must be a parsing error
-    //var classSelector;
+    var classNames = el$.attr('class');
+    var classSelector;
     if (classNames) {
-        classSelector = '.' + $.trim(classNames).replace(/\s+/g, '.');
-        elemsig$.attr('class', classNames); //may want this to be in normal format "class1 class2" instead of selector format ".class1.class2"
-        selector += classSelector;
+        classSelector = '.' + $.trim(classNames).replace(/\s+/gi, '.');
     }
 
+    var selector;
     var parent$ = el$.parent();
-    var siblings$ = parent$.children(el.tagName);
-    var isRelative = false;
-
-    if (siblings$.filter(selector).length == 1) {
+    var siblings$ = parent$.children();
+    var needParent = false;
+    if (classSelector && siblings$.filter(classSelector).length == 1) {
         // Classes are unique among siblings; use that
-        //selector = classSelector;
-        //we are done, return?
+        selector = classSelector;
     } else if (siblings$.filter(el.tagName).length == 1) {
         // Tag name is unique among siblings; use that
-        //selector = el.tagName;
-        //elemsig$.attr()
-        //we are done, return?
+        selector = el.tagName;
     } else {
         // Default to saying "nth child"
-        //selector = ':nth(' + $(this).index() + ')';
-        elemsig$.attr('child', siblings$.index(el));
-        isRelative = true;
-        //we are done
+        selector = ':nth(' + $(this).index() + ')';
+        needParent = true;
     }
 
-    elemsig$.attr('relative', isRelative);
-
     // Bypass ancestors that don't matter
-    if (!isRelative) {
+    if (!needParent) {
         for (ancestor$ = parent$.parent() ;
              ancestor$.length == 1 && ancestor$.find(selector).length == 1;
              parent$ = ancestor$, ancestor$ = ancestor$.parent());
         if (ancestor$.length == 0) {
-            return elemsig$;
+            return selector;
         }
     }
-
-    return parent$.getSelector(elemsig$);
-}
-$.fn.elemSigToSelector = function (selector) {
-
-    var elemsig = this[0];
-    if (!elemsig.tagName) {
-        return selector;
-    }
-
-    var elemsig$ = $(elemsig);
-
-    if (selector)
-        selector += ' ';
+    var selectorType;
+    if (el$.parent()[0] == parent$[0])
+        selectorType = ' > '
     else
-        selector = '';
-
-    selector += elemsig$.attr('tag');
-    if (elemsig$.attr('id'))
-        selector += '#' + elemsig$.attr('id');
-
-    if (elemsig$.attr('class')) {
-        classSelector = '.' + $.trim(elemsig$.attr('class')).replace(/\s+/g, '.');
-        selector += classSelector;
-    }
-
-    if (elemsig$.attr('child'))
-        selector += ':eq(' + elemsig$.attr('child') + ')';
-
-    if (elemsig$.children().length == 0)
-        return selector;
-    var test = elemsig$.children()[0];
-
-    return $(elemsig$.children()[0]).elemSigToSelector(selector);
-
+        selectorType = ' '
+    return parent$.getSelector() + selectorType + selector;
 }
 
 var Validate = (function () {
@@ -151,7 +107,7 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             return;
         }
 
-        getSource(url, function (srcDoc) {
+        getSource(url, function (srcDoc) { //cleanup fucntion in filtercontrol needs to be called after website changes
             if (srcDoc == "invalid") {
                 $('#website').css('border', '1px solid red');
                 Loading.End();
@@ -201,6 +157,9 @@ var FilterControl = (function (window) {
     var _iframe = {};
     var _elementTree = [];
     var _inUse = false;
+    var _targets = ['#signature', '#column'];
+    var _selected = 0;
+    var _claimedElements = [];
 
     var init = function (iframe) {
 
@@ -237,6 +196,13 @@ var FilterControl = (function (window) {
         });
 
 
+        $('#disablejs').change(function () {
+            if ($('#disablejs').prop('checked'))
+                $(_iframe).attr('sandbox', 'allow-forms allow-pointer-lock allow-popups allow-same-origin'); //allowed scripts for tests
+            else
+                $(_iframe).attr('sandbox', 'allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts');
+        });
+
         $('#switch-on, #switch-off').change(function () { //ugly
             Loading.Start();
             if ($('#switch-on').prop('checked')) {
@@ -249,19 +215,13 @@ var FilterControl = (function (window) {
             Loading.End();
         });
 
-        $('#disablejs').change(function () {
-            if ($('#disablejs').prop('checked'))
-                $(_iframe).attr('sandbox', 'allow=forms allow-pointer-lock allow-popups allow-same-origin allow-scripts'); //allowed scripts for tests
-            else
-                $(_iframe).removeAttr('sandbox');
-        });
-
         $('.qtyplus').click(function (e) { //super ugly
             var currentVal = parseInt($('#level').val());
             if (!isNaN(currentVal) && (currentVal + 1) < _elementTree.length) {
                 $(_elementTree[currentVal]).removeClass('selectedElement');
                 if (!doesOverlap(_elementTree[currentVal + 1])) { //only need to check this while incrementing I think...debug it
                     $('#level').val(currentVal + 1);
+                    $(_targets[_selected]).val($(_elementTree[currentVal + 1]).getSelector()); //update sig
                     $(_elementTree[currentVal + 1]).addClass('selectedElement');
                 } else {
                     $(_elementTree[currentVal]).addClass('selectedElement');
@@ -269,6 +229,7 @@ var FilterControl = (function (window) {
             } else {
                 $(_elementTree[currentVal]).removeClass('selectedElement');
                 $('#level').val(0);
+                $(_targets[_selected]).val($(_elementTree[0]).getSelector()); //update sig
                 $(_elementTree[0]).addClass('selectedElement');
             }
             return false;
@@ -277,22 +238,42 @@ var FilterControl = (function (window) {
         $(".qtyminus").click(function (e) { //we probably can put these in a function that changes depending on params, ie: add/subtract
             var currentVal = parseInt($('#level').val());
             if (!isNaN(currentVal) && currentVal > 0) {
-                $(_elementTree[currentVal]).removeClass('selectedElement');
+                $(_elementTree[currentVal]).removeClass('selectedElement'); //re run selector on level change!!
                 $('#level').val(currentVal - 1);
+                $(_targets[_selected]).val($(_elementTree[currentVal - 1]).getSelector()); //update sig
                 $(_elementTree[currentVal - 1]).addClass('selectedElement');
             } else {
                 $(_elementTree[currentVal]).removeClass('selectedElement');
                 $('#level').val(0);
+                $(_targets[_selected]).val($(_elementTree[0]).getSelector()); //update sig
                 $(_elementTree[0]).addClass('selectedElement');
             }
             return false;
         });
 
+        $('#signature').click(function () {
+            $('#column').css('border', '')
+            $('#signature').css('border', '1px solid orange')
+            _selected = 0;
+        });
+        $('#signature').trigger('click');
+
+        $('#column').click(function () {
+            if ($('#definedonpage').prop('checked')) {
+                $('#signature').css('border', '')
+                $('#column').css('border', '1px solid orange')
+                _selected = 1;
+            }
+        })
+
         $('#definedonpage').change(function () {
             if ($('#signature').val().length > 0)
-                if ($('#definedonpage').prop('checked'))
+                if ($('#definedonpage').prop('checked')) {
+                    $('#column').trigger('click');
                     $('#column').prop('readonly', true);
-                else
+                    _selected = 1
+                    _inUse = false;
+                } else
                     $('#column').prop('readonly', false);
             else {
                 alert("You must selected a main signature before you can select a custom column");
@@ -313,7 +294,7 @@ var FilterControl = (function (window) {
         });
     };
 
-    var filter = function (e) {
+    var filter = function (e) { //need to get the filters in the db to show up under the filters tab
         if (e.ctrlKey &&
             !doesOverlap(e.target)) {
 
@@ -321,23 +302,21 @@ var FilterControl = (function (window) {
             $(e.target).trigger("mouseout"); //get rid of our outline, double check this actually works...
             //generate element hierarchy 
 
+            getHierarchy(e.target);
             //Scan elements in hierarchy to see if a parent has already been selected
             var _filteridx = 0;
             for (var i = 0; i < _elementTree.length; i++) {
-                if ($(_elementTree[i]).hasClass('selectedElement')) {
-                    $('#signature').val($(_elementTree[i]).data('signature'));
-                    getHierarchy(_elementTree[i]);
+                if ($(_elementTree[i]).hasClass('selectedElement')) { //check this to see if it equal to columnElement and deletedelement
+                    $(_targets[_selected]).val($(_elementTree[i]).getSelector());
+                    getHierarchy(_elementTree[i]); //regrab hierarchy with the selected element as index 0
                     grabFilter();
                     return;
                 }
             }
-            getHierarchy(e.target);
-            var selector$ = $(e.target).getSelector();
-            var test$ = $.parseHTML(selector$[0].outerHTML);
-            var source = $(test$).elemSigToSelector();
-            $(e.target).data('signature', selector$[0].outerHTML);
-            $('#signature').val($(e.target).data('signature'));
-            $(e.target).addClass('selectedElement');
+
+            $(_targets[_selected]).val($(e.target).getSelector());
+            $(e.target).addClass(currentState());
+            _claimedElements.push(e.target);
 
             //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
             //if user doesnt save filter on screen when filters are turned off, it is never sent to the server to save.
@@ -372,8 +351,6 @@ var FilterControl = (function (window) {
     };
 
     var saveFilter = function (e) { //check if level changed and if it did just delete the old filter on the server and replace it with the new one
-        //_filters[_filteridx] = _elementTree;
-        //_filteridx++;
         var signature = $('#signature').val();
         var prefix = $('#prefix').val();
         var strip = $('#strip').val();
@@ -409,10 +386,9 @@ var FilterControl = (function (window) {
     }
 
     var deleteFilter = function (e) {
-        for (var i = 0; i < _elementTree.length; i++) {
-            if ($(_elementTree[i]).hasClass('selectedElement'))
-                $(_elementTree[i]).removeClass('selectedElement');
-        }
+        for (var i = 0; i < _claimedElements.length; i++)
+            $(_claimedElements[i]).removeClass('selectedElement columnElement deletedElement');
+        _claimedElements = [];
         cleanUp();
     };
 
@@ -424,7 +400,12 @@ var FilterControl = (function (window) {
         $('#definedonpage').prop('checked', false);
         $('#column').prop('readonly', false);
         $('#column').val('');
+        $('#signature').trigger('click');
         _inUse = false;
+    }
+
+    var currentState = function () {
+        return _selected == 0 ? 'selectedElement' : 'columnElement';
     }
 
     var getHierarchy = function (target) {

@@ -43,7 +43,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             if(head != null)
             {
                 string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", socket.Host);
-                string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
+                string newCssLinkContent = "<link href=\"/Content/remote.css?v=1\" rel=\"stylesheet\" type=\"text/css\">";
                 HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
                 HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
                 head.PrependChild(newBase);

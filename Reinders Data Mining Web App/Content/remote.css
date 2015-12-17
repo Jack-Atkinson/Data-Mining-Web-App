@@ -14,6 +14,21 @@
     outline: 2px solid red !important;
 }
 
+.columnElement {
+    outline: 2px solid orange !important;
+}
+.columnElement:link {
+    outline: 2px solid orange !important;
+}
+.columnElement:visited {
+    outline: 2px solid orange !important;
+}
+.columnElement:hover {
+    outline: 2px solid orange !important;
+}
+.columnElement:active {
+    outline: 2px solid orange !important;
+}
 
 .deletedElement {
     outline: 2px solid purple !important;
