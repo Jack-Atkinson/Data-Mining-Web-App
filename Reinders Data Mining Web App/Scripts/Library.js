@@ -252,26 +252,25 @@ var FilterControl = (function (window) {
         });
 
         $('#signature').click(function () {
-            $('#column').css('border', '')
-            $('#signature').css('border', '1px solid orange')
+            $('#column').css('border', '');
+            $('#signature').css('border', '1px solid orange');
             _selected = 0;
         });
         $('#signature').trigger('click');
 
         $('#column').click(function () {
             if ($('#definedonpage').prop('checked')) {
-                $('#signature').css('border', '')
-                $('#column').css('border', '1px solid orange')
+                $('#signature').css('border', '');
+                $('#column').css('border', '1px solid orange');
                 _selected = 1;
             }
-        })
+        });
 
         $('#definedonpage').change(function () {
             if ($('#signature').val().length > 0)
                 if ($('#definedonpage').prop('checked')) {
                     $('#column').trigger('click');
                     $('#column').prop('readonly', true);
-                    _selected = 1
                     _inUse = false;
                 } else
                     $('#column').prop('readonly', false);
@@ -296,7 +295,7 @@ var FilterControl = (function (window) {
 
     var filter = function (e) { //need to get the filters in the db to show up under the filters tab
         if (e.ctrlKey &&
-            !doesOverlap(e.target)) {
+            !doesOverlap(e.target)) { //gotta check if the data-id value has already been filled in, and if so dont create new data row when saving
 
             _inUse = true;
             $(e.target).trigger("mouseout"); //get rid of our outline, double check this actually works...
@@ -307,9 +306,9 @@ var FilterControl = (function (window) {
             var _filteridx = 0;
             for (var i = 0; i < _elementTree.length; i++) {
                 if ($(_elementTree[i]).hasClass('selectedElement')) { //check this to see if it equal to columnElement and deletedelement
-                    $(_targets[_selected]).val($(_elementTree[i]).getSelector());
                     getHierarchy(_elementTree[i]); //regrab hierarchy with the selected element as index 0
-                    grabFilter();
+                    grabFilter(parseInt($(_elementTree[0]).attr('data-id'))); //set to zero because of getHierarchy
+                    _claimedElements.push(_elementTree[0]);
                     return;
                 }
             }
@@ -317,6 +316,7 @@ var FilterControl = (function (window) {
             $(_targets[_selected]).val($(e.target).getSelector());
             $(e.target).addClass(currentState());
             _claimedElements.push(e.target);
+            
 
             //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
             //if user doesnt save filter on screen when filters are turned off, it is never sent to the server to save.
@@ -356,33 +356,85 @@ var FilterControl = (function (window) {
         var strip = $('#strip').val();
         var column = $('#column').val();
         var domain = $($('#target-frame').contents().find('#basedomain')).attr('href');
-        
+        var element = $('#target-frame').contents().find(signature)
 
+        if ($(element).attr('data-id')) {
+            var id = $(element).attr('data-id');
+            $.ajax({
+                url: '/Filters/Edit',
+                method: 'POST',
+                datatype: 'json',
+                data: {
+                    'id' : id,
+                    'signature': signature,
+                    'prefix': prefix,
+                    'strip': strip,
+                    'column': column,
+                    'domain': domain,
+                },
+                success: function (response) {
+                    if (!response)
+                        alert("Something went wrong while updating the filter!");
+                },
+                failure: function (xhr, status, error) {
+                    var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                }
+            });
+        } else {
+            $.ajax({
+                url: '/Filters/Create',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    'signature': signature,
+                    'prefix': prefix,
+                    'strip': strip,
+                    'column': column,
+                    'domain': domain,
+                },
+                success: function (response) {
+                    if (response)
+                        $(element).attr('data-id', response);
+                    else
+                        alert("Something went wrong while saving the filter!");
+                },
+                error: function (xhr, status, error) {
+                    var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                }
+            });
+        }
+        cleanUp();
+    };
+
+    var grabFilter = function (id) { //this sends the value in #signature to the server and then gets back prefix/strip/column if it exists
         $.ajax({
-            url: '/Filters/Create',
-            method: 'POST',
+            url: '/Filters/Details',
+            method: 'GET',
             dataType: 'json',
-            data: {
-                'signature': signature,
-                'prefix': prefix,
-                'strip': strip ,
-                'column': column,
-                'domain': domain,
-            },
+            data: { 'id' : id },
             success: function (response) {
-                alert(response);
+                if (response) {
+                    $('#signature').val(response.Signature);
+                    $('#prefix').val(response.Prefix);
+                    $('#strip').val(response.Strip);
+                    if ($('#target-frame').contents().find(response.Column).length > 0) {
+                        $('#definedonpage').prop('checked', true);
+                        $('#column').prop('readonly', true);
+                    } else {
+                        $('#definedonpage').prop('checked', false);
+                        $('#column').prop('readonly', false);
+                    }
+                    $('#column').val(response.Column);
+                } else
+                    alert("Something went wrong while retrieving the filter!");
             },
             error: function (xhr, status, error) {
                 var err = eval("(" + xhr.responseText + ")");
                 alert(err.Message);
-                callback("invalid");
             }
         });
-        cleanUp();
-    };
-
-    var grabFilter = function () { //this sends the value in #signature to the server and then gets back prefix/strip/column if it exists
-
     }
 
     var deleteFilter = function (e) {
@@ -417,19 +469,16 @@ var FilterControl = (function (window) {
         });
     }
 
-    var doesOverlap = function (element, ignore) {
-        var ignore = ignore || 0;
+    var doesOverlap = function (element) {
         var children = $(element).find('*').toArray();
         for (var i = 0; i < children.length; i++) {
-            if (children[i] != ignore &&
-                $(children[i]).hasClass('selectedElement')) {
+            if ($(children[i]).hasClass('selectedElement')) {
                 alert('Cannot overlap filters!'); //maybe that could be useful...will have to ask the crew
                 return true;
             }
         }
         return false;
     };
-
 
 
     var show = function () {

@@ -21,18 +21,18 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         }
 
         // GET: Filters/Details/5
-        public ActionResult Details(int? id)
+        public JsonResult Details(int? id)
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return Json(false, JsonRequestBehavior.AllowGet);
             }
             Models.Filter filter = db.Filters.Find(id);
             if (filter == null)
             {
-                return HttpNotFound();
+                return Json(false, JsonRequestBehavior.AllowGet);
             }
-            return View(filter);
+            return Json(filter, JsonRequestBehavior.AllowGet);
         }
 
         // GET: Filters/Create
@@ -51,7 +51,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             {
                 db.Filters.Add(filter);
                 db.SaveChanges();
-                return Json(true, JsonRequestBehavior.AllowGet);
+                return Json(filter.Id, JsonRequestBehavior.AllowGet);
             }
 
             return Json(false, JsonRequestBehavior.AllowGet);
@@ -76,16 +76,15 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id,Signature,Prefix,Strip,Column,Domain")] Models.Filter filter)
+        public JsonResult Edit([Bind(Include = "Id,Signature,Prefix,Strip,Column,Domain")] Models.Filter filter)
         {
             if (ModelState.IsValid)
             {
                 db.Entry(filter).State = EntityState.Modified;
                 db.SaveChanges();
-                return RedirectToAction("Index");
+                return Json(true, JsonRequestBehavior.AllowGet);
             }
-            return View(filter);
+            return Json(false, JsonRequestBehavior.AllowGet);
         }
 
         // GET: Filters/Delete/5
