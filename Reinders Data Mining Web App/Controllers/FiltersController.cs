@@ -35,6 +35,17 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             return Json(filter, JsonRequestBehavior.AllowGet);
         }
 
+        // POST: Filters/GetFilters
+        [HttpPost]
+        public JsonResult GetFilters(string domain)
+        {
+            List<Models.Filter> filters = new List<Models.Filter>();
+
+            filters = db.Filters.Where(f => f.Domain == domain).ToList();
+
+            return Json(filters, JsonRequestBehavior.AllowGet);
+        }
+
         // GET: Filters/Create
         public ActionResult Create()
         {
@@ -88,7 +99,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         }
 
         // GET: Filters/Delete/5
-        public ActionResult Delete(int? id)
+        /*public ActionResult Delete(int? id)
         {
             if (id == null)
             {
@@ -100,17 +111,21 @@ namespace Reinders_Data_Mining_Web_App.Controllers
                 return HttpNotFound();
             }
             return View(filter);
-        }
+        }*/
 
         // POST: Filters/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        [HttpPost]
+        public JsonResult Delete(int id)
         {
             Models.Filter filter = db.Filters.Find(id);
-            db.Filters.Remove(filter);
-            db.SaveChanges();
-            return RedirectToAction("Index");
+            bool error = false;
+            if(filter != null)
+            {
+                db.Filters.Remove(filter);
+                db.SaveChanges();
+                error = true;
+            }
+            return Json(error, JsonRequestBehavior.AllowGet);
         }
 
         protected override void Dispose(bool disposing)

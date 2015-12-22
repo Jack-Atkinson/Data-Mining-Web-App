@@ -2,7 +2,7 @@
     //http://www.timvasil.com/blog14/post/2014/02/24/Build-a-unique-selector-for-any-DOM-element-using-jQuery.aspx with minor changes
 
     var el = this[0];
-    if (!el.tagName) {
+    if (!el || !el.tagName) {
         return '';
     }
 
@@ -118,6 +118,7 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             _url = url;
             $(_iframe).attr("srcdoc", srcDoc);
             Loading.End();
+            FilterControl.UpdateFilterList();
             return;
         });
         return;
@@ -160,6 +161,7 @@ var FilterControl = (function (window) {
     var _targets = ['#signature', '#column'];
     var _selected = 0;
     var _claimedElements = [];
+    var _selectedId = undefined;
 
     var init = function (iframe) {
 
@@ -193,6 +195,7 @@ var FilterControl = (function (window) {
                     return false;
                 }
             });
+            showFilters();
         });
 
 
@@ -203,8 +206,13 @@ var FilterControl = (function (window) {
                 $(_iframe).attr('sandbox', 'allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts');
         });
 
+        $('#filterdisplaybody').on('click', 'tr', function (e) {
+            $("#filterdisplaybody tr").css('background-color', '');
+            $(this).css('background-color', '#cccccc');
+            _selectedId = $(this).attr('data-id');
+        });
+
         $('#switch-on, #switch-off').change(function () { //ugly
-            Loading.Start();
             if ($('#switch-on').prop('checked')) {
                 $('.switch').css('background', 'green');
                 show();
@@ -212,7 +220,6 @@ var FilterControl = (function (window) {
                 $('.switch').css('background', '#808080');
                 hide();
             }
-            Loading.End();
         });
 
         $('.qtyplus').click(function (e) { //super ugly
@@ -289,9 +296,54 @@ var FilterControl = (function (window) {
         });
 
         $('#deletefilter').click(function (e) {
-            deleteFilter(e)
+            deleteFilter()
         });
+
+        $('#cancelfilter').click(function (e) {
+            cleanUp();
+        });
+
+        $('#oldeditfilter').click(function (e) {
+            $('#filterdisplaybody').find('tr').filter(function () {
+                if ($(this).css('background-color') == 'rgb(204, 204, 204)') {
+                    $('#functionTabLink').removeClass('unselectedTab');
+                    $('#controlTabLink').addClass('unselectedTab');
+                    $('#functionTab').show();
+                    $('#controlTab').hide();
+                    grabFilter(_selectedId);
+                    $('#switch-on').prop('checked', true);
+                    $('#switch-on').trigger('change');
+                }
+            })
+        });
+
+        $('#olddeletefilter').click(function (e) {
+            deleteFilter();
+        })
     };
+
+    var showFilters = function () {
+        var id;
+        $('#filterdisplaybody').find('tr').filter(function () {
+            id = $(this).attr('data-id');
+            $.ajax({
+                url: '/Filters/Details',
+                method: 'GET',
+                dataType: 'json',
+                data: { 'id': id },
+                success: function (response) {
+                    if (response) {
+                        $(_iframe).contents().find(response.Signature).addClass('selectedElement');
+                        $(_iframe).contents().find(response.Signature).attr('data-id', id);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    var err = eval("(" + xhr.responseText + ")");
+                    alert(err.Message);
+                }
+            });
+        });
+    }
 
     var filter = function (e) { //need to get the filters in the db to show up under the filters tab
         if (e.ctrlKey &&
@@ -311,6 +363,8 @@ var FilterControl = (function (window) {
                     _claimedElements.push(_elementTree[0]);
                     return;
                 }
+                if ($(_elementTree[i]).hasClass('columnElement') || $(_elementTree[i]).hasClass('deletedElement'))
+                    return;
             }
 
             $(_targets[_selected]).val($(e.target).getSelector());
@@ -350,16 +404,53 @@ var FilterControl = (function (window) {
         return;
     };
 
+    var updateFilterList = function () {
+        $('#filterdisplaybody').empty();
+        var domain = $($('#target-frame').contents().find('#basedomain')).attr('href');
+        $.ajax({
+            url: '/Filters/GetFilters',
+            method: 'POST',
+            datatype: 'json',
+            data: {
+                'domain': domain
+            },
+            success: function (response) {
+                if (!response)
+                    alert("Something went wrong while retrieving the filters!");
+                else {
+                    var column;
+                    var prefix;
+                    var strip;
+                    var id;
+                    var row;
+                    for (var i = 0; i < response.length; i++) {
+                        column = response[i].Column;
+                        prefix = response[i].Prefix;
+                        strip = response[i].Strip;
+                        id = response[i].Id;
+                        row = '<tr data-id="' + id + '"><td>' + column + '</td><td>' + prefix + '</td><td>' + strip + '</td></tr>'
+                        $('#filterdisplay').find('tbody:last').append(row);
+                    }
+                }
+            },
+            failure: function (xhr, status, error) {
+                var err = eval("(" + xhr.responseText + ")");
+                alert(err.Message);
+            }
+        });
+    }
+
     var saveFilter = function (e) { //check if level changed and if it did just delete the old filter on the server and replace it with the new one
         var signature = $('#signature').val();
         var prefix = $('#prefix').val();
         var strip = $('#strip').val();
         var column = $('#column').val();
         var domain = $($('#target-frame').contents().find('#basedomain')).attr('href');
-        var element = $('#target-frame').contents().find(signature)
+        var element = $('#target-frame').contents().find(signature);
 
-        if ($(element).attr('data-id')) {
-            var id = $(element).attr('data-id');
+        if ($(element).attr('data-id') || _selectedId) {
+            var id = _selectedId || $(element).attr('data-id');
+            _selectedId = undefined;
             $.ajax({
                 url: '/Filters/Edit',
                 method: 'POST',
@@ -437,11 +528,38 @@ var FilterControl = (function (window) {
         });
     }
 
-    var deleteFilter = function (e) {
-        for (var i = 0; i < _claimedElements.length; i++)
-            $(_claimedElements[i]).removeClass('selectedElement columnElement deletedElement');
-        _claimedElements = [];
+    var deleteFilter = function () {
+        var id;
+        if (!_selectedId) {
+            for (var i = 0; i < _claimedElements.length; i++) {
+                if ($(_claimedElements[i]).hasClass('selectedElement')) {
+                    id = $(_claimedElements[i]).attr('data-id');
+                    $(_claimedElements[i]).attr('data-id', '');
+                }
+                $(_claimedElements[i]).removeClass('selectedElement columnElement deletedElement');
+            }
+            _claimedElements = [];
+        } else {
+            id = _selectedId;
+            _selectedId = undefined;
+        }
+
+        $.ajax({
+            url: '/Filters/Delete',
+            method: 'POST',
+            dataType: 'json',
+            data: { 'id': id },
+            success: function (response) {
+                if (!response)
+                    alert("Something went wrong while deleting the filter!");
+            },
+            error: function (xhr, status, error) {
+                var err = eval("(" + xhr.responseText + ")");
+                alert(err.Message);
+            }
+        });
         cleanUp();
+        updateFilterList();
     };
 
     var cleanUp = function () {
@@ -495,7 +613,7 @@ var FilterControl = (function (window) {
         Init: init,
         Show: show,
         Hide: hide,
-
+        UpdateFilterList: updateFilterList,
     }
 })();
 

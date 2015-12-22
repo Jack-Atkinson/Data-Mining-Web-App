@@ -17,6 +17,7 @@
                         $('#functionTabLink').addClass('unselectedTab');
                         $('#controlTab').show();
                         $('#functionTab').hide();
+                        FilterControl.UpdateFilterList();
                         break;
                 }
             }

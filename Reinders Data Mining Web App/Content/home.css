@@ -239,3 +239,21 @@
 	width: 19px;
 	z-index: 1;
 }
+
+#controlTab {
+    margin: 10px;
+}
+
+#filterdisplay {
+    table-layout: fixed; /* This enforces the "col" widths. */
+}
+
+#filterdisplay th, #filterdisplay td {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#filterdisplay tbody tr:hover {
+    cursor: pointer;
+    background-color: #eaeaea;
+}
