@@ -17,14 +17,8 @@ namespace Reinders_Data_Mining_Web_App.Library
 {
     public class WebScraper
     {
-        private IE BrowserField;
         private string HostField;
         private List<string> LinksField;
-
-        public IE Browser
-        {
-            get { return BrowserField; }
-        }
 
         public string Host
         {
@@ -36,15 +30,13 @@ namespace Reinders_Data_Mining_Web_App.Library
             get { return LinksField; }
         }
 
-        public WebScraper(string linkFilePath, string host)
+        public WebScraper(string linkFilePath)
         {
-            HostField = host;
-            //WatiN.Core.Settings.MakeNewIeInstanceVisible = false;
+            //WatiN.Core.Settings.MakeNewIeInstanceVisible = false; //for some reason if this is set, WaTiN is super slow
             LinksField = new List<string>();
             foreach (string link in System.IO.File.ReadLines(linkFilePath))
                 LinksField.Add(link);
-
-            //BrowserField = new IE();
+            HostField = "http://" + new Uri(LinksField.First()).Host;
         }
 
         public int BeginScrape()
@@ -84,48 +76,57 @@ namespace Reinders_Data_Mining_Web_App.Library
                 }
             }
 
-            BrowserField = new IE();
-
             filters = filters.OrderBy(x => x.IsPrimary != true)
                              .ThenBy(x => x.Column).ToList(); //Orders the list so that the primarykey is first, if not specified it will organize by column
-
-            using (CsvFileWriter writer =
-                new CsvFileWriter(@"C:\Users\jacka\desktop\output.csv"))
-            {
-                CsvRow row = new CsvRow();
-
-                foreach (string column in filters.Select(x => x.Column))
-                        row.Add(column);
-                writer.WriteRow(row);
-                HtmlDocument source = new HtmlDocument();
-                string xpath;
-                string scrapedHtml;
-                foreach (string link in LinksField)
+            using(IE Browser = new IE())
+                using (CsvFileWriter writer =
+                    new CsvFileWriter(@"C:\Users\jacka\desktop\output.csv"))
                 {
-                    BrowserField.GoTo(link);
-                    BrowserField.WaitForComplete();
-                    source.LoadHtml(BrowserField.Body.Parent.OuterHtml);
-                    row = new CsvRow();
-                    foreach (Models.Filter filter in filters)
-                    {
-                        xpath = Converter.CSSToXPath(filter.Signature);
-                        HtmlNode element = source.DocumentNode.SelectSingleNode(xpath);
-                        if (element == null)
-                            row.Add("");
-                        else
-                        {
-                            scrapedHtml = element.InnerHtml;
-                            scrapedHtml = Regex.Replace(scrapedHtml, @"\t|\n|\r", ""); //this is where we insert out cleaner function and unit changer
-                            row.Add(scrapedHtml);
-                        }
-                    }
+                    CsvRow row = new CsvRow();
+
+                    foreach (string column in filters.Select(x => x.Column))
+                            row.Add(column);
                     writer.WriteRow(row);
+                    HtmlDocument source = new HtmlDocument();
+                    string xpath;
+                    string scrapedHtml;
+                    foreach (string link in LinksField)
+                    {
+                        Browser.GoTo(link);
+                        Browser.WaitForComplete();
+                        source.LoadHtml(Browser.Body.Parent.OuterHtml);
+                        row = new CsvRow();
+                        bool shouldContinue = false;
+                        foreach (Models.Filter filter in filters)
+                        {
+                            if (shouldContinue)
+                                continue;
+                            xpath = Converter.CSSToXPath(filter.Signature);
+                            HtmlNode element = source.DocumentNode.SelectSingleNode(xpath); //make it so that if primary is true, and it's not found then skip the whole loop
+                            if (element == null)
+                            {
+                                if (filter.IsPrimary) //basically if the primary key doesnt exist on the page we skip the whole page
+                                {
+                                    shouldContinue = true;
+                                    continue;
+                                }
+                                row.Add("");
+                            }
+                            else
+                            {
+                                scrapedHtml = element.InnerHtml;
+                                scrapedHtml = Regex.Replace(scrapedHtml, @"\t|\n|\r", ""); //this is where we insert out cleaner function and unit changer
+                                row.Add(scrapedHtml);
+                            }
+                        }
+                        if(!shouldContinue)
+                            writer.WriteRow(row);
+
+                    }
 
                 }
 
-            }
-
-                return 0;
+            return 0;
         }
 
 

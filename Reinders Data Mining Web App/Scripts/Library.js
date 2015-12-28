@@ -553,13 +553,14 @@ var FilterControl = (function (window) {
             success: function (response) {
                 if (!response)
                     alert("Something went wrong while deleting the filter!");
+
+                updateFilterList();
             },
             error: function (error) {
                 alert(error);
             }
         });
         cleanUp();
-        updateFilterList();
     };
 
     var cleanUp = function () {

@@ -11,6 +11,14 @@ using System.Threading.Tasks;
 using WatiN.Core;
 using System.Threading;
 
+/*
+TODO:
+    Add "GO" button
+    make file upload and webscraper work together
+    make download button for csv
+    make it so that if the isprimary key is set and the current page doesnt contain the key, then skip it
+*/
+
 namespace Reinders_Data_Mining_Web_App.Controllers
 {
     public class HomeController : Controller
@@ -27,23 +35,13 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         {
             string blah = "This is test reply";
             return Json(blah, JsonRequestBehavior.AllowGet);
+           
         }
 
         public JsonResult GetTargetSource(string url)
         {
             HTTPSocket socket = new HTTPSocket(url);
             string source = socket.GetSource();
-            //Thread thread = new Thread(() => { source = test(url); });
-            //thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-
-            //if (source == "invalid")
-                //return Json(source, JsonRequestBehavior.AllowGet);
-
-
-            //thread.Start();
-            //thread.Join(); //Wait for the thread to end
-
-
 
             HtmlDocument htmlDoc = new HtmlDocument(); //urgh sooo ugly
             htmlDoc.LoadHtml(source);
@@ -68,35 +66,23 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult FileUpload(HttpPostedFileBase uploadFile)
         {
-            /*if (uploadFile.ContentLength > 0) // null error if no file is selected, fix this
+            if (uploadFile != null && uploadFile.ContentLength > 0) // null error if no file is selected, fix this
             {
                 string filePath = Path.Combine(HttpContext.Server.MapPath("../Uploads"),
                                                Path.GetFileName(uploadFile.FileName));
+                if (Path.GetExtension(filePath) != ".txt")
+                    return RedirectToAction("Index");
+
                 uploadFile.SaveAs(filePath);
-            }*/
-            int result = 0;
-            WebScraper ws = new WebScraper(Path.Combine(HttpContext.Server.MapPath("../Uploads"), "test.txt"), "http://store.rainbird.com");
-            Thread thread = new Thread(() => { result = ws.BeginScrape(); });
-            thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-            thread.Start();
-            thread.Join();
+                int result = 0;
+                WebScraper ws = new WebScraper(filePath);
+                Thread thread = new Thread(() => { result = ws.BeginScrape(); });
+                thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+                thread.Start();
+                thread.Join();
+            }
             
             return RedirectToAction("Index");
         }
-
-        public string test(string url)
-        {
-            string source;
-            using (IE test = new IE())
-            {
-                test.ShowWindow(WatiN.Core.Native.Windows.NativeMethods.WindowShowStyle.Hide);
-                test.GoTo(url);
-                test.WaitForComplete();
-                source = test.Body.Parent.OuterHtml;
-            }
-            return source;
-        }
-
-
     }
 }

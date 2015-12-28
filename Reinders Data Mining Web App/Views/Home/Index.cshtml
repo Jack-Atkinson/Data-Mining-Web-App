@@ -113,11 +113,10 @@
                             <input id="olddeletefilter" class="btn btn-default btn-sm" type="button" value="Delete" />
                         </div>
 
-                        @using (Html.BeginForm("FileUpload", "Home",
-    FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
+                        @using (Html.BeginForm("FileUpload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
                         {
                             <input class="btn-sm" name="uploadFile" type="file" />
-                            <input class="btn btn-default btn-sm" type="submit" value="Upload File" />
+                            <input class="btn btn-default btn-sm" type="submit" value="Upload & Scrape" />
                         }
                     </div>
                 </div>
