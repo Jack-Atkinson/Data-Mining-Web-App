@@ -7,12 +7,18 @@ using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using Reinders_Data_Mining_Web_App.Models;
+using System.Data.Entity.Core.Objects;
 
 namespace Reinders_Data_Mining_Web_App.Controllers
 {
     public class FiltersController : Controller
     {
         private FilterDBContext db = new FilterDBContext();
+
+        public FilterDBContext Database
+        {
+            get { return db; }
+        }
 
         // GET: Filters
         public ActionResult Index()
@@ -56,7 +62,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public JsonResult Create([Bind(Include = "Signature,Prefix,Strip,Column,Domain")] Models.Filter filter)
+        public JsonResult Create([Bind(Include = "Signature,Prefix,Strip,Column,IsPrimary,Domain")] Models.Filter filter)
         {
             if (ModelState.IsValid)
             {
@@ -87,12 +93,14 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
-        public JsonResult Edit([Bind(Include = "Id,Signature,Prefix,Strip,Column,Domain")] Models.Filter filter)
+        public JsonResult Edit([Bind(Include = "Id,Signature,Prefix,Strip,Column,IsPrimary,Domain")] Models.Filter filter)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(filter).State = EntityState.Modified;
+               db.Entry(filter).State = EntityState.Modified;
+                // db.Entry(filter).State = EntityState.Added;
                 db.SaveChanges();
+                
                 return Json(true, JsonRequestBehavior.AllowGet);
             }
             return Json(false, JsonRequestBehavior.AllowGet);

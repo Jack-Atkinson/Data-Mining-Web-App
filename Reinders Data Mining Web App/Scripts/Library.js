@@ -118,7 +118,7 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             _url = url;
             $(_iframe).attr("srcdoc", srcDoc);
             Loading.End();
-            FilterControl.UpdateFilterList();
+            FilterControl.UpdateFilterList(); //dont make this fetch the base tag
             return;
         });
         return;
@@ -133,9 +133,8 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
             success: function (srcDoc) {
                 callback(srcDoc);
             },
-            error: function (xhr, status, error) {
-                var err = eval("(" + xhr.responseText + ")");
-                alert(err.Message);
+            error: function (error) {
+                alert(error);
                 callback("invalid");
             }
         });
@@ -171,8 +170,8 @@ var FilterControl = (function (window) {
 
         $(_iframe).load(function () { //hook the iframe contents, put a hook in here that whenever new source is gathered, load the page through the filters to highlight elements that would be selected
             $(_iframe).contents().find("body").click(function (e) {
-                if ($('#switch-on').prop('checked') && !_inUse)
-                    filter(e);
+                if ($('#switch-on').prop('checked') && !_inUse && e.ctrlKey)
+                    filter(e.target);
                 return false;
             });
 
@@ -310,7 +309,7 @@ var FilterControl = (function (window) {
                     $('#controlTabLink').addClass('unselectedTab');
                     $('#functionTab').show();
                     $('#controlTab').hide();
-                    grabFilter(_selectedId);
+                    grabFilter($(this).attr('data-id'));
                     $('#switch-on').prop('checked', true);
                     $('#switch-on').trigger('change');
                 }
@@ -337,23 +336,21 @@ var FilterControl = (function (window) {
                         $(_iframe).contents().find(response.Signature).attr('data-id', id);
                     }
                 },
-                error: function (xhr, status, error) {
-                    var err = eval("(" + xhr.responseText + ")");
-                    alert(err.Message);
+                error: function (error) {
+                    alert(error);
                 }
             });
         });
     }
 
-    var filter = function (e) { //need to get the filters in the db to show up under the filters tab
-        if (e.ctrlKey &&
-            !doesOverlap(e.target)) { //gotta check if the data-id value has already been filled in, and if so dont create new data row when saving
+    var filter = function (target) { //need to get the filters in the db to show up under the filters tab
+        if (!doesOverlap(target)) { //gotta check if the data-id value has already been filled in, and if so dont create new data row when saving
 
             _inUse = true;
-            $(e.target).trigger("mouseout"); //get rid of our outline, double check this actually works...
+            $(target).trigger("mouseout"); //get rid of our outline, double check this actually works...
             //generate element hierarchy 
 
-            getHierarchy(e.target);
+            getHierarchy(target);
             //Scan elements in hierarchy to see if a parent has already been selected
             var _filteridx = 0;
             for (var i = 0; i < _elementTree.length; i++) {
@@ -367,9 +364,9 @@ var FilterControl = (function (window) {
                     return;
             }
 
-            $(_targets[_selected]).val($(e.target).getSelector());
-            $(e.target).addClass(currentState());
-            _claimedElements.push(e.target);
+            $(_targets[_selected]).val($(target).getSelector());
+            $(target).addClass(currentState());
+            _claimedElements.push(target);
             
 
             //also, when we switch filter off/go to a different page, let the backend C# send the saved filter to jquery so it can autoamtically highlight filters on a different page if they match
@@ -377,14 +374,14 @@ var FilterControl = (function (window) {
 
         }
 
-        if (e.altKey) { //first check if it's even a child of a selectedElement
+        /*if (e.altKey) { //first check if it's even a child of a selectedElement
 
             var selector$ = $.parseHTML($('#signature').val());
 
 
             $(e.target).addClass('deletedElement');
 
-        }
+        }*/
         return;
     };
 
@@ -433,9 +430,8 @@ var FilterControl = (function (window) {
                     }
                 }
             },
-            failure: function (xhr, status, error) {
-                var err = eval("(" + xhr.responseText + ")");
-                alert(err.Message);
+            failure: function (error) {
+                alert(error);
             }
         });
     }
@@ -445,11 +441,12 @@ var FilterControl = (function (window) {
         var prefix = $('#prefix').val();
         var strip = $('#strip').val();
         var column = $('#column').val();
+        var isPrimary = $('#primarykey').prop('checked');
         var domain = $($('#target-frame').contents().find('#basedomain')).attr('href');
         var element = $('#target-frame').contents().find(signature);
 
-        if ($(element).attr('data-id') || _selectedId) {
-            var id = _selectedId || $(element).attr('data-id');
+        if ($(element).attr('data-id')) {
+            var id = $(element).attr('data-id');
             _selectedId = undefined;
             $.ajax({
                 url: '/Filters/Edit',
@@ -461,15 +458,15 @@ var FilterControl = (function (window) {
                     'prefix': prefix,
                     'strip': strip,
                     'column': column,
+                    'isprimary': isPrimary,
                     'domain': domain,
                 },
                 success: function (response) {
                     if (!response)
                         alert("Something went wrong while updating the filter!");
                 },
-                failure: function (xhr, status, error) {
-                    var err = eval("(" + xhr.responseText + ")");
-                    alert(err.Message);
+                failure: function (error) {
+                    alert(error);
                 }
             });
         } else {
@@ -482,6 +479,7 @@ var FilterControl = (function (window) {
                     'prefix': prefix,
                     'strip': strip,
                     'column': column,
+                    'isprimary': isPrimary,
                     'domain': domain,
                 },
                 success: function (response) {
@@ -490,9 +488,8 @@ var FilterControl = (function (window) {
                     else
                         alert("Something went wrong while saving the filter!");
                 },
-                error: function (xhr, status, error) {
-                    var err = eval("(" + xhr.responseText + ")");
-                    alert(err.Message);
+                error: function (error) {
+                    alert(error);
                 }
             });
         }
@@ -518,12 +515,16 @@ var FilterControl = (function (window) {
                         $('#column').prop('readonly', false);
                     }
                     $('#column').val(response.Column);
+                    if (response.IsPrimary) {
+                        $('#primarykey').prop('checked', true);
+                    } else {
+                        $('#primarykey').prop('checked', false);
+                    }
                 } else
                     alert("Something went wrong while retrieving the filter!");
             },
-            error: function (xhr, status, error) {
-                var err = eval("(" + xhr.responseText + ")");
-                alert(err.Message);
+            error: function (error) {
+                alert(error);
             }
         });
     }
@@ -553,9 +554,8 @@ var FilterControl = (function (window) {
                 if (!response)
                     alert("Something went wrong while deleting the filter!");
             },
-            error: function (xhr, status, error) {
-                var err = eval("(" + xhr.responseText + ")");
-                alert(err.Message);
+            error: function (error) {
+                alert(error);
             }
         });
         cleanUp();
@@ -571,6 +571,7 @@ var FilterControl = (function (window) {
         $('#column').prop('readonly', false);
         $('#column').val('');
         $('#signature').trigger('click');
+        $('#primarykey').prop('checked', false);
         _inUse = false;
     }
 

@@ -79,23 +79,19 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <div class="checkbox">
+                                    <label><input id="primarykey" type="checkbox">Primary Key</label> <!--make it so when this is checked it cannot be checked again-->
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <input id="savefilter" class="btn btn-default btn-sm" type="button" value="Save"/>
                                 <input id="deletefilter" class="btn btn-default btn-sm" type="button" value="Delete" />
                                 <input id="cancelfilter" class="btn btn-default btn-sm" type="button" value="Cancel" />
-                            </div>
-                            <div class="form-group">
-                                <label><input id="primarykey" type="checkbox">Primary Key</label> <!--make it so when this is checked it cannot be checked again-->
                             </div>
                         </div>
                         <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
                     </div>
                     <div id="controlTab" style="display: none">
-                        <!--@using (Html.BeginForm("FileUpload", "Home", 
-                FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
-                        {
-                            <input class="btn-sm" name="uploadFile" type="file" />
-                            <input class="btn btn-default btn-sm" type="submit" value="Upload File" />
-                        }-->
                         <table id="filterdisplay" class="table">
                             <colgroup>
                                 <col width="130px" />
@@ -116,6 +112,13 @@
                             <input id="oldeditfilter" class="btn btn-default btn-sm" type="button" value="Edit" />
                             <input id="olddeletefilter" class="btn btn-default btn-sm" type="button" value="Delete" />
                         </div>
+
+                        @using (Html.BeginForm("FileUpload", "Home",
+    FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
+                        {
+                            <input class="btn-sm" name="uploadFile" type="file" />
+                            <input class="btn btn-default btn-sm" type="submit" value="Upload File" />
+                        }
                     </div>
                 </div>
             </div>
