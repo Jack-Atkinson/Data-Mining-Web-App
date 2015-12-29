@@ -114,11 +114,12 @@ var IframeControl = (function () { //maybe no need to have a filter switch, just
                 alert("The server did not return valid HTML");
                 return;
             }
-            $('#website').css('border', '1px solid green');
+            var blob = new Blob([srcDoc], { type: 'text/html' });
+            $(_iframe).attr("src", URL.createObjectURL(blob));
             _url = url;
-            $(_iframe).attr("srcdoc", srcDoc);
-            Loading.End();
             FilterControl.UpdateFilterList(); //dont make this fetch the base tag
+            $('#website').css('border', '1px solid green');
+            Loading.End();
             return;
         });
         return;
@@ -203,6 +204,15 @@ var FilterControl = (function (window) {
                 $(_iframe).attr('sandbox', 'allow-forms allow-pointer-lock allow-popups allow-same-origin'); //allowed scripts for tests
             else
                 $(_iframe).attr('sandbox', 'allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts');
+
+            //window.URL = window.URL || window.webkitURL;
+
+            var blob = new Blob(['body { color: red; }'], { type: 'text/css' });
+
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = URL.createObjectURL(blob);
+            document.body.appendChild(link);
         });
 
         $('#filterdisplaybody').on('click', 'tr', function (e) {
@@ -388,16 +398,23 @@ var FilterControl = (function (window) {
     var browse = function (e, element) {
         $('#website').css('border', '1px solid orange');
         var url = $(element).attr("href");
-        if (url.charAt(0) == '#' || url == "") //change this to get the full url instead
+        if (url.charAt(0) == '#' || url == "") {//change this to get the full url instead
+            $('#website').css('border', '1px solid green');
             return;
+        }
 
-        if (url.charAt(0) == '/')
+        if (url.charAt(0) == '/') //make check for urls that are like "test.php", that just means the test.php in whatever directory you are currently in
             url = $(_iframe).contents().find('base').attr('href') + url;
+
+        if (!Validate.Url(url))
+            url = $('#website').val() + '/' + url;
 
         if (Validate.Url(url)) {
             $('#website').val(url); //this isnt always correct, some bugs occur if websites use different ways of navigation
             IframeControl.ChangeSrcDoc(url);
-        }
+            $('#website').css('border', '1px solid green');
+        } else
+            $('#website').css('border', '1px solid red');
         return;
     };
 
@@ -593,8 +610,8 @@ var FilterControl = (function (window) {
         var children = $(element).find('*').toArray();
         for (var i = 0; i < children.length; i++) {
             if ($(children[i]).hasClass('selectedElement')) {
-                alert('Cannot overlap filters!'); //maybe that could be useful...will have to ask the crew
-                return true;
+                //alert('Cannot overlap filters!'); //maybe that could be useful...will have to ask the crew
+                return false; //true, testing with overlapping filters
             }
         }
         return false;

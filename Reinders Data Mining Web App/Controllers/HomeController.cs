@@ -10,6 +10,8 @@ using HtmlAgilityPack;
 using System.Threading.Tasks;
 using WatiN.Core;
 using System.Threading;
+using Awesomium.Core;
+
 
 /*
 TODO:
@@ -41,14 +43,27 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         public JsonResult GetTargetSource(string url)
         {
             HTTPSocket socket = new HTTPSocket(url);
-            string source = socket.GetSource();
+            socket.GetSource();
+
+            Uri remoteUri = new Uri(url);
+            string host = remoteUri.Host;
+            string source = null; // socket.GetSource();
+            Thread thread = new Thread(() => { source = GetSource(url); });
+            thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
+            thread.Start();
+            thread.Join();
+
 
             HtmlDocument htmlDoc = new HtmlDocument(); //urgh sooo ugly
             htmlDoc.LoadHtml(source);
+            htmlDoc.DocumentNode.Descendants()
+                            .Where(x => x.Name == "script")
+                            .ToList()
+                            .ForEach(x => x.Remove());
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             if(head != null)
             {
-                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", socket.Host);
+                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", host); //socket.Host
                 string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
                 HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
                 HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
@@ -83,6 +98,49 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             }
             
             return RedirectToAction("Index");
+        }
+
+        private string GetSource(string url)
+        {
+            string doc = null;
+            using (IE Browser = new IE())
+            {
+                bool notComplete = true;
+                while (notComplete)
+                {
+                    try
+                    {
+                        Browser.GoTo(url);
+                        Browser.WaitForComplete();
+                        notComplete = false;
+                    }
+                    catch
+                    {
+                        Browser.Refresh();
+                    }
+                }
+                while (Browser.Body.Parent.OuterHtml == null) { }
+                doc = Browser.Body.Parent.OuterHtml;
+            }
+
+            return doc;
+        }
+
+        private string AwesomiumTest(string url)
+        {
+            string source = null;
+
+            WebCore.Initialize(WebConfig.Default);
+
+            using (WebSession session = WebCore.CreateWebSession(WebPreferences.Default))
+            {
+                using (WebView view = WebCore.CreateWebView(0, 0, Web))
+                {
+
+                }
+            }
+
+            return source;
         }
     }
 }

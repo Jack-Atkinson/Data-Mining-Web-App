@@ -103,7 +103,7 @@ namespace css2xpath {
                         stream.Next();
                         peek = stream.Peek();
 
-                        Object selector;
+                        object selector;
                         int asInt;
                         if (peek is Str) {
                             selector = stream.Next().Contents;
