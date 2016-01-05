@@ -37,6 +37,11 @@ namespace Reinders_Data_Mining_Web_App.Library
             Driver.Navigate().GoToUrl(url);
         }
 
+        public void LoadFromHtml(string html)
+        {
+
+        }
+
         public void Click(string target)
         {
             Driver.FindElement(By.jQuery(target)).Click();

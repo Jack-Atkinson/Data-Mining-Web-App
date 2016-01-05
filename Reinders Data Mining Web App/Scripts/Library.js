@@ -55,28 +55,32 @@
 var UI = (function () {
 
     var _iframe;
+    var _blocking = false;
 
     var init = function () {
         _iframe = '#targetframe';
 
-        $('#urlinput').keyup(function (e) {
-            if (e.which == 13)
-                navigation.GoTo($('#urlinput').val());
-        });
-
-        $(_iframe).load(function () {
-            $(_iframe).contents().find('body').click(function (e) {
-                var url = e.target;
-                navigation.Click(e.target);
-                return false;
-            });
-        });
+        navigation.Init();
+        iframeControl.Init();
 
     };
 
     var navigation = (function () {
 
+        var init = function () {
+            $('#urlinput').keyup(function (e) {
+                if (e.which == 13)
+                    navigation.GoTo($('#urlinput').val());
+            });
+
+            $('#refresh').click(function () {
+                navigation.GoTo($('#urlinput').val());
+            });
+        };
+
         var goto = function (url) {
+            if (_blocking)
+                return;
             loading();
             $('#urlinput').val(url);
             if (!isValid(url)) {
@@ -102,6 +106,9 @@ var UI = (function () {
         };
 
         var click = function (element) {
+            if (_blocking)
+                return;
+            loading();
             var target = $(element).getSelector();
             $.ajax({
                 url: '/Home/Click',
@@ -140,6 +147,9 @@ var UI = (function () {
             $('#urlwrapper').addClass('has-error')
             $('#success').hide();
             $('#failure').show();
+            $('#elementselector').removeAttr('style');
+            $('#elementselector').hide();
+            _blocking = false;
         };
 
         var success = function () {
@@ -148,19 +158,97 @@ var UI = (function () {
             $('#urlwrapper').addClass('has-success');
             $('#failure').hide();
             $('#success').show();
+            $('#elementselector').removeAttr('style');
+            $('#elementselector').hide();
+            _blocking = false;
         }
 
         var loading = function () {
+            $('#elementselector').removeAttr('style');
+            $('#elementselector').css({
+                'position': 'absolute',
+                'left': 0,
+                'top': 0,
+                'width': $(_iframe).width(),
+                'height': $(_iframe).height(),
+                '-ms-filter': '"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"',
+                'filter': 'alpha(opacity=50)',
+                '-moz-opacity': '0.5',
+                '-khtml-opacity': '0.5',
+                'opacity': '0.5',
+                'pointer-events': 'auto',
+                'background-color': '#FFFFFF'
+            });
+            $('#elementselector').show();
             $('#urlwrapper').removeClass('has-success');
             $('#urlwrapper').removeClass('has-error')
             $('#urlwrapper').addClass('has-warning');
             $('#failure').hide();
             $('#success').hide();
+            _blocking = true;
         }
 
         return {
+            Init: init,
             GoTo: goto,
             Click: click,
+        }
+
+    })();
+
+    var iframeControl = (function () {
+        var _lastEventArg = {};
+
+        var init = function () {
+
+            $(_iframe).load(function () {
+                $(this).contents().find('body').click( function (e) {
+                    var url = e.target;
+                    navigation.Click(e.target);
+                    return false;
+                });
+
+                $($(this).contents()).scroll(function (e) {
+                    updateSelector(_lastTarget);
+                })
+
+                $(this).contents().find("body").children().mouseover(function (e) {
+                    updateSelector(e.target);
+                    _lastTarget = e.target;
+                    return false;
+                });
+            });
+
+        }
+        var updateSelector = function (target) {
+            var width = $(target).outerWidth();
+            var height = $(target).outerHeight() < $(_iframe).height() ? $(target).outerHeight() : $(_iframe).height() - 20;
+            var position = $(target).offset();
+            position.left -= $(_iframe).contents().scrollLeft();
+            position.top -= $(_iframe).contents().scrollTop();
+            if (position.top < 0) { //boundary checks
+                height += position.top;
+                position.top = 0;
+            }
+            if ((position.top + height) > $(_iframe).height()) {
+                height -= (position.top + height) - $(_iframe).height();
+                        
+            }
+            $('#elementselector').css({
+                'position': 'absolute',
+                'left': position.left,
+                'top': position.top,
+                'width': width,
+                'height': height,
+                'box-shadow': '0 0 10px #000',
+                'pointer-events': 'none'
+            });
+            $('#elementselector').show();
+            return false;
+        };
+
+        return {
+            Init: init,
         }
 
     })();
@@ -168,6 +256,8 @@ var UI = (function () {
     return {
         Init: init
     }
+
+
 
 })();
 

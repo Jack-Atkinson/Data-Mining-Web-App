@@ -58,6 +58,13 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             string host = BrowserDriver.GetHost(url);
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(pageSource);
+            htmlDoc.DocumentNode.Descendants()
+                            .Where(x => x.Name == "script")
+                            .ToList()
+                            .ForEach(x => x.Remove());
+
+
+            HtmlNodeCollection test = htmlDoc.DocumentNode.SelectNodes("//link[@href and @type='text/css']"); //get css from website, download the css, modify the css removing :hover classes
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             if (head != null)
             {

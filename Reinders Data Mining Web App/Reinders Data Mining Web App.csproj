@@ -184,7 +184,6 @@
   <ItemGroup>
     <Folder Include="Content\imgs\home\" />
     <Folder Include="Uploads\" />
-    <Folder Include="Views\BrowserDriver\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
