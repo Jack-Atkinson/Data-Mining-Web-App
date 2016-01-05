@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-using WatiN.Core;
 using System.Configuration;
 using HtmlAgilityPack;
 using System.Data.SqlClient;
 using System.Text;
 using ReadWriteCsv;
 using System.IO;
-using css2xpath;
 using System.Text.RegularExpressions;
 
 namespace Reinders_Data_Mining_Web_App.Library
@@ -78,7 +76,7 @@ namespace Reinders_Data_Mining_Web_App.Library
 
             filters = filters.OrderBy(x => x.IsPrimary != true)
                              .ThenBy(x => x.Column).ToList(); //Orders the list so that the primarykey is first, if not specified it will organize by column
-            using(IE Browser = new IE())
+            /*using(IE Browser = new IE())
                 using (CsvFileWriter writer =
                     new CsvFileWriter(@"C:\Users\jacka\desktop\output.csv"))
                 {
@@ -101,7 +99,6 @@ namespace Reinders_Data_Mining_Web_App.Library
                         {
                             if (shouldContinue)
                                 continue;
-                            xpath = Converter.CSSToXPath(filter.Signature);
                             HtmlNode element = source.DocumentNode.SelectSingleNode(xpath); //make it so that if primary is true, and it's not found then skip the whole loop
                             if (element == null)
                             {
@@ -124,7 +121,7 @@ namespace Reinders_Data_Mining_Web_App.Library
 
                     }
 
-                }
+                }*/
 
             return 0;
         }

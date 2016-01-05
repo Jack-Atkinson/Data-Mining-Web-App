@@ -1,262 +1,94 @@
-﻿.presenter { /*need to make a seperate css file that only includes the selectedElement class. No need to make iframe inherit all our custom rules*/
-    width: 100%;
-    height: calc(100% - 35px);
-    overflow: hidden;
-    box-shadow: 0 5px 5px -5px #333;
-}
-
-.control {
-    width: 300px;
-    height: 100%;
-    -webkit-box-shadow: -5px 0px 5px -3px #616161;
-    -moz-box-shadow:    -5px 0px 5px -3px #616161;
-    box-shadow:         -5px 0px 5px -3px #616161;
-    border-right: 2px solid #BBB;
-}
-
-.control #logo {
-    align-content: center;
-    margin-top: 15px;
-}
-
-.control #loadinggif {
-    height: 80px;
-    position: absolute;
-    bottom: 40px;
-    left: 190px;
-}
-
-.control ul {
-    margin-top: 15px;
-    padding: 0;
+﻿body {
     display: table;
     width: 100%;
-    height: 25px;
+    height: 100%;
 }
 
-.control #tabSelection a {
-    padding-top: 2px;
-}
-
-.control #tabSelection li {
-    display: table-cell;
-    font-family: Verdana;
-    font-size: 1em;
-    text-align: center;
-    border-left: 1px solid #dddddd;
-    border-top: 1px solid #dddddd;
-    border-right: 1px solid #dddddd;
-
-}
-.control li:hover {
-    background-color: #eaeaea;
-}
-
-.control li a {
-    text-decoration: none;
-    color: #616161;
-    display: block;
+body > section {
+    display: table-row;
     width: 100%;
-    height: 100%;
 }
 
-#urlentry {
-    margin: 10px;
-    margin-top: 20px;
+body > section > div {
+    display: table-cell;
+    width: 100%;
 }
 
-.unselectedTab {
-   -moz-box-shadow:    inset 0px -5px 5px -3px #616161;
-   -webkit-box-shadow: inset 0px -5px 5px -3px #616161;
-   box-shadow:         inset 0px 0px 5px #616161;
-
-   /*-moz-box-shadow:    inset -5px 0px 5px 3px #616161;
-   -webkit-box-shadow: inset 5px 0px 5px 0px #616161;
-   box-shadow:         inset -5px 0px 5px 3px #616161;*/
+#navigationsection {
+    height: 50px;
 }
 
-#functionTab {
-    margin: 10px;
+#navigationwrapper {
+    line-height: 48px;
+    display: flex;
 }
 
-#filterswitch {
-    margin-bottom: 15px;
-    overflow: hidden;
+#navigationwrapper div {
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
-#filterswitch label {
-    line-height: 25px;
-    margin: 0;
+#navigationwrapper div:first-child {
+    margin-left: 10px;
+}
+
+#navigationwrapper div:last-child {
+    margin-right: 10px;
+}
+
+#urlwrapper {
+    width: 100%;
+}
+
+#urlwrapper input {
+    width: 100%;
+}
+
+#urlwrapper > span {
+    line-height: inherit;
+    display: none;
 }
 
 
-.target-renderer {
-    width: calc(100% - 300px);
-    height: 100%;
+#iframewrapper {
+    position: relative;
 }
 
-.target-renderer iframe {
+#iframewrapper::before {
+    position: absolute;
+    content: '';
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -moz-box-shadow: inset 0 10px 10px -10px #000000,
+                     inset 0 -10px 10px -10px #000000;
+    -webkit-box-shadow: inset 0 10px 10px -10px #000000,
+                        inset 0 -10px 10px -10px #000000;
+    box-shadow: inset 0 10px 10px -10px #000000,
+                inset 0 -10px 10px -10px #000000;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#elementSelector {
+    pointer-events: none;
+    position: absolute;
+}
+
+#targetframe {
+    position: relative;
+    display: block;
     width: 100%;
     height: 100%;
     border: 0;
 }
 
-#levelcontrol {
-    margin-bottom: 15px;
+#filtersection {
+    height: 300px;
 }
 
-#levelbuttons {
-    display: inline-block;
-}
-
-#levellabel {
-    margin: 0;
-    line-height: 25px;
-}
-
-#levelbuttons .qty {
-    width: 40px;
-    height: 25px;
-    text-align: center;
-}
-
-#levelbuttons .qtyplus { width:25px; height:25px;}
-#levelbuttons .qtyminus { width:25px; height:25px;}
-
-.bootstrap-select {
-    width: 100% !important;
-}
-
-#level {
-    display: inline-block;
-}
-
-.checkbox {
-    margin-top: 0;
-}
-#website {
-    display: inline-block !important;
-    width: 227px;
-}
-
-#refresh {
-    display: inline-block;
-}
-
-
-.switch input[type="radio"] {
-    box-sizing: border-box;
-    padding: 0;
-    font-family: inherit;
-    font-size: 100%;
-    line-height: normal;
-    margin: 0;
-}
-
-/* ---------- SWITCH ---------- */
-
-.switchcontainer {
-	height: 25px;
-	width: 60px;
-    float: right;
-}
-
-.switch {
-	background: #808080;
-	border-radius: 32px;
-	display: block;
-	height: 25px;
-	position: relative;
-	width: 60px;
-}
-
-.switch label {
-	color: #fff;
-	font-size: 1em;
-	font-weight: 400;
-	text-transform: uppercase;
-	-webkit-transition: color .2s ease;
-	-moz-transition: color .2s ease;
-	-ms-transition: color .2s ease;
-	-o-transition: color .2s ease;
-	transition: color .2s ease;
-	width: 40px;
-}
-
-.switch label:nth-of-type(1) {
-	left: -75%;
-	position: absolute;
-	text-align: right;
-}
-
-.switch label:nth-of-type(2) {
-	position: absolute;
-    right: -75%;
-	text-align: left;
-}
-
-.switch input {
-	height: 25px;
-	left: 0;
-	opacity: 0;
-	position: absolute;
-	top: 0;
-	width: 60px;
-	z-index: 2;
-}
-
-.switch input:checked~label:nth-of-type(1) { color: red; }
-.switch input:checked~label:nth-of-type(2) { color: #808080; }
-
-.switch input~:checked~label:nth-of-type(1) { color: #808080; }
-.switch input~:checked~label:nth-of-type(2) { color: green; }
-
-.switch input:checked~.toggle {
-	left: 4px;
-}
-
-.switch input~:checked~.toggle {
-	left: 37px;
-}
-
-.switch input:checked {
-	z-index: 0;
-}
-
-.toggle {
-	background: #fff;
-	border-radius: 50%;
-	height: 19px;
-	left: 0;
-	position: absolute;
-	top: 3px;
-	-webkit-transition: left .2s ease;
-	-moz-transition: left .2s ease;
-	-ms-transition: left .2s ease;
-	-o-transition: left .2s ease;
-	transition: left .2s ease;
-	width: 19px;
-	z-index: 1;
-}
-
-#controlTab {
-    margin: 10px;
-}
-
-#filterdisplay {
-    table-layout: fixed; /* This enforces the "col" widths. */
-}
-
-#filterdisplay th, #filterdisplay td {
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-#filterdisplay tbody tr:hover {
-    cursor: pointer;
-    background-color: #eaeaea;
-}
-
-#primarykey {
-    font-weight: normal;
+#filterinputs {
+    padding: 10px;
+    width: 50%;
 }

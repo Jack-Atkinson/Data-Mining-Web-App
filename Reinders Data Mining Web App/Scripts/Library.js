@@ -52,6 +52,125 @@
     return parent$.getSelector() + selectorType + selector;
 }
 
+var UI = (function () {
+
+    var _iframe;
+
+    var init = function () {
+        _iframe = '#targetframe';
+
+        $('#urlinput').keyup(function (e) {
+            if (e.which == 13)
+                navigation.GoTo($('#urlinput').val());
+        });
+
+        $(_iframe).load(function () {
+            $(_iframe).contents().find('body').click(function (e) {
+                var url = e.target;
+                navigation.Click(e.target);
+                return false;
+            });
+        });
+
+    };
+
+    var navigation = (function () {
+
+        var goto = function (url) {
+            loading();
+            $('#urlinput').val(url);
+            if (!isValid(url)) {
+                error()
+                return false;
+            }
+            $.ajax({
+                url: '/Home/Goto',
+                method: 'GET',
+                dataType: 'json',
+                data: { url: url },
+                success: function (pagesource) {
+                    var srcblob = new Blob([pagesource], { type: "text/html" });
+                    $('#targetframe').attr('src', window.URL.createObjectURL(srcblob));
+                    success();
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                    error();
+                }
+            });
+        };
+
+        var click = function (element) {
+            var target = $(element).getSelector();
+            $.ajax({
+                url: '/Home/Click',
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    url: $('#urlinput').val(),
+                    target: target,
+                },
+                success: function (result) {
+                    $('#urlinput').val(result.Url)
+                    var srcblob = new Blob([result.Src], { type: "text/html" });
+                    $('#targetframe').attr('src', window.URL.createObjectURL(srcblob));
+                    success();
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                    error();
+                }
+            });
+        };
+
+        var isValid = function (url) {
+            var linkRegexFilter = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
+            var linkRegex = new RegExp(linkRegexFilter, 'i');
+            if (url.length < 2083 && linkRegex.test(url))
+                return true;
+            else
+                return false;
+        }
+
+        var error = function () {
+            $('#urlwrapper').removeClass('has-warning');
+            $('#urlwrapper').removeClass('has-success');
+            $('#urlwrapper').addClass('has-error')
+            $('#success').hide();
+            $('#failure').show();
+        };
+
+        var success = function () {
+            $('#urlwrapper').removeClass('has-warning');
+            $('#urlwrapper').removeClass('has-error')
+            $('#urlwrapper').addClass('has-success');
+            $('#failure').hide();
+            $('#success').show();
+        }
+
+        var loading = function () {
+            $('#urlwrapper').removeClass('has-success');
+            $('#urlwrapper').removeClass('has-error')
+            $('#urlwrapper').addClass('has-warning');
+            $('#failure').hide();
+            $('#success').hide();
+        }
+
+        return {
+            GoTo: goto,
+            Click: click,
+        }
+
+    })();
+
+    return {
+        Init: init
+    }
+
+})();
+
 var Validate = (function () {
     var url = function (link) {
         var linkRegexFilter =

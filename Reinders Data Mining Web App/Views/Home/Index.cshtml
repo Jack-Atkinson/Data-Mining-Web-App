@@ -1,135 +1,68 @@
-﻿@model Reinders_Data_Mining_Web_App.Models.Filter
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reinders, Inc</title>
-    @Styles.Render("~/Content/home")
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/Content/core.css")" />
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/Content/home.css")" />
+    <link rel="stylesheet" type="text/css" href="@Url.Content("~/Content/bootstrap.css")" />
+    <script type="text/javascript" src="@Url.Content("~/Scripts/jquery-2.1.4.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/bootstrap.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/Library.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/View.js")"></script>
 </head>
 <body>
-    <div class="main-view">
-        <section class="presenter">
-            <div class="control lfloat">
-                <div id="logo" class="textalignc">
-                    <img src="~/Content/imgs/shared/reindersLogo.png" alt="Reinders, Inc." />
-                </div>
-                <div id="urlentry" class="form-group">
-                    <label for="website">Website:</label>
-                    <div class="checkbox rfloat">
-                        <label><input id="disablejs" type="checkbox" />Disable Javascript</label>
-                    </div>
-                    <input name="website" id="website" type="text" class="form-control" />
-                    <button id="refresh" class="btn btn-default btn-sm"><img src="~/Content/imgs/shared/refresh.png" alt="Refresh" width="24px" height="24px"/></button> <!--little too big-->
-                </div>
-                <ul id="tabSelection">
-                    <li id="functionTabLink">
-                        <a href="javascript:changeTab('functionTab')">Filter Creation</a>
-                    </li>
-                    <li id="controlTabLink" class="unselectedTab">
-                        <a href="javascript:changeTab('controlTab')">Filters</a>
-                    </li>
-                </ul>
-                <div id="tabControl">
-                    <div id="functionTab">
-                        <div id="filterswitch"> <!--Must change these ID's to their new meaning!-->
-                            <label class="lfloat">Enable Filter:</label>
-                            <div class="switchcontainer">
-                                <div class="switch">
-                                    <input type="radio" name="switch" id="switch-off" />
-                                    <input type="radio" name="switch" id="switch-on"/>
-                                    <span class="toggle"></span>
-                                </div> <!-- end switch -->
-                            </div> <!-- end container -->
-                        </div>
-                        <div id="filtercontrols" style="display: none;">
-                            <div class="form-group">
-                                <div id="levelcontrol">
-                                    <label id="levellabel" for="level">Level:</label>
-                                    <div id="levelbuttons" class="rfloat">
-                                        <input type='button' value='-' class='qtyminus btn btn-default btn-sm ' field='level' />
-                                        <input type='text' name='level' id="level" value='0' class='qty form-control' readonly />
-                                        <input type='button' value='+' class='qtyplus btn btn-default btn-sm' field='level' />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="signature">Signature:</label>
-                                <input name="signature" id="signature" type="text" class="form-control" readonly/>
-                            </div>
-                            <div class="form-group">
-                                <label for="prefix">Prefix:</label>
-                                <input name="prefix" id="prefix" type="text" class="form-control" />
-                            </div>
-                            <div class="form-group">
-                                <label for="strip">Strip:</label>
-                                <input name="strip" id="strip" type="text" class="form-control" />
-                            </div>
-                            <div id="columnselection">
-                                <div class="form-group">
-                                    <label class="lfloat" for="endmarker">Column:</label>
-                                    <div class="checkbox rfloat">
-                                        <label><input id="definedonpage" type="checkbox">Defined on page</label>
-                                    </div>
-                                    <input name="column" id="column" type="text" class="form-control"/>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="checkbox">
-                                    <label><input id="primarykey" type="checkbox">Primary Key</label> <!--make it so when this is checked it cannot be checked again-->
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <input id="savefilter" class="btn btn-default btn-sm" type="button" value="Save"/>
-                                <input id="deletefilter" class="btn btn-default btn-sm" type="button" value="Delete" />
-                                <input id="cancelfilter" class="btn btn-default btn-sm" type="button" value="Cancel" />
-                            </div>
-                        </div>
-                        <img id="loadinggif" src="~/Content/imgs/shared/hex-loader2.gif" alt="Loading" />
-                    </div>
-                    <div id="controlTab" style="display: none">
-                        <table id="filterdisplay" class="table">
-                            <colgroup>
-                                <col width="130px" />
-                                <col width="74px" />
-                                <col width="74px" />
-                            </colgroup>
-                            <thead>
-                                <tr>
-                                    <th>Column</th>
-                                    <th>Prefix</th>
-                                    <th>Strip</th>
-                                </tr>
-                            </thead>
-                            <tbody id="filterdisplaybody">
-                            </tbody>
-                        </table>
-                        <div id="filterdisplaycontrols" class="form-group">
-                            <input id="oldeditfilter" class="btn btn-default btn-sm" type="button" value="Edit" />
-                            <input id="olddeletefilter" class="btn btn-default btn-sm" type="button" value="Delete" />
-                        </div>
-
-                        @using (Html.BeginForm("FileUpload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))// be aware, null check this
-                        {
-                            <input class="btn-sm" name="uploadFile" type="file" />
-                            <input class="btn btn-default btn-sm" type="submit" value="Upload & Scrape" />
-                        }
-                    </div>
-                </div>
+    <section id="navigationsection">
+        <div id="navigationwrapper" class="form-inline">
+            <div class="form-group"><button id="backwards" class="btn btn-default"><i class="glyphicon glyphicon-chevron-left"></i></button></div>
+            <div class="form-group"><button id="forwards" class="btn btn-default"><i class="glyphicon glyphicon-chevron-right"></i></button></div>
+            <div class="form-group"><button id="refresh" class="btn btn-default"><i class="glyphicon glyphicon-refresh"></i></button></div>
+            <div id="urlwrapper" class="form-group has-feedback">
+                <input id="urlinput" type="text" class="form-control" spellcheck="false"/>
+                <span id="success" class="glyphicon glyphicon-ok form-control-feedback"></span>
+                <span id="failure" class="glyphicon glyphicon-remove form-control-feedback"></span>
             </div>
-            <div class="target-renderer lfloat">
-                <iframe id="target-frame" srcdoc="" sandbox="allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts"></iframe> <!--Maybe add an option to load a page without javascript, program will still work the display page will just look nasty-->
-            </div>
-        </section>
-        <div class="footer">
-            <p>Reinders, Inc. Data Mining Web Application</p>
         </div>
-    </div>
+    </section>
+    <section id="iframesection">
+        <div id="iframewrapper">
+            <div id="elementSelector"></div>
+            <iframe id="targetframe" src="http://www.reinders.com"></iframe>
+        </div>
+    </section>
+    <section id="filtersection">
+        <div>
+            <div id="filterinputs">
+                <div class="row">
+                    <div class="col-xs-6 form-group">
+                        <label>Label1</label>
+                        <input class="form-control" type="text" />
+                    </div>
+                    <div class="col-xs-6 form-group">
+                        <label>Label2</label>
+                        <input class="form-control" type="text" />
+                    </div>
+                    <div class="col-xs-6">
+                        <div class="row">
+                            <label class="col-xs-12">Label3</label>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-6">
+                                <input class="form-control" type="text" />
+                            </div>
+                            <div class="col-xs-12 col-sm-6">
+                                <input class="form-control" type="text" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 form-group">
+                        <label>Label4</label>
+                        <input class="form-control" type="text" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
-@Scripts.Render("~/library/datamining")
 </html>
-

@@ -6,10 +6,9 @@ using System.Web.Mvc;
 using Reinders_Data_Mining_Web_App.Models;
 using Reinders_Data_Mining_Web_App.Library;
 using System.IO;
-using HtmlAgilityPack;
 using System.Threading.Tasks;
-using WatiN.Core;
 using System.Threading;
+using HtmlAgilityPack;
 
 /*
 TODO:
@@ -26,16 +25,47 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         // GET: Home
         public ActionResult Index()
         {
-            /*string test = "Hello";
-            ViewBag.Test = test;*/
             return View();
         }
 
-        public JsonResult Test()
+        // GET: Goto
+        public JsonResult Goto(string url)
         {
-            string blah = "This is test reply";
-            return Json(blah, JsonRequestBehavior.AllowGet);
-           
+            BrowserDriver browser = new BrowserDriver();
+            browser.GoTo(url);
+            string source = browser.PageSource;
+            UpdateBase(ref source, url);
+            browser.Close();
+            return Json(source, JsonRequestBehavior.AllowGet);
+        }
+
+        // GET: Click
+        public JsonResult Click(string url, string target)
+        {
+            BrowserDriver browser = new BrowserDriver();
+            browser.GoTo(url);
+            browser.Click(target);
+            string source = browser.PageSource;
+            UpdateBase(ref source, url);
+            var result = new { Url = browser.Url, Src = source };
+            browser.Close();
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+
+        private void UpdateBase(ref string pageSource, string url)
+        {
+            string host = BrowserDriver.GetHost(url);
+            HtmlDocument htmlDoc = new HtmlDocument();
+            htmlDoc.LoadHtml(pageSource);
+            HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
+            if (head != null)
+            {
+                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", host);
+                HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
+                head.PrependChild(newBase);
+                pageSource = htmlDoc.DocumentNode.OuterHtml;
+            }
         }
 
         public JsonResult GetTargetSource(string url)
