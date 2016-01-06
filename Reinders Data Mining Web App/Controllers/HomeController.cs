@@ -75,31 +75,6 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             }
         }
 
-        public JsonResult GetTargetSource(string url)
-        {
-            HTTPSocket socket = new HTTPSocket(url);
-            string source = socket.GetSource();
-
-            HtmlDocument htmlDoc = new HtmlDocument(); //urgh sooo ugly
-            htmlDoc.LoadHtml(source);
-            HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
-            if(head != null)
-            {
-                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", socket.Host);
-                string newCssLinkContent = "<link href=\"/Content/remote.css\" rel=\"stylesheet\" type=\"text/css\">";
-                HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
-                HtmlNode newCssLink = HtmlNode.CreateNode(newCssLinkContent);
-                head.PrependChild(newBase);
-                head.PrependChild(newCssLink);
-                source = htmlDoc.DocumentNode.InnerHtml;
-                }
-            else
-            {
-                source = "invalid";
-            }
-            return Json(source, JsonRequestBehavior.AllowGet);
-        }
-
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult FileUpload(HttpPostedFileBase uploadFile)
         {
@@ -108,18 +83,18 @@ namespace Reinders_Data_Mining_Web_App.Controllers
                 string filePath = Path.Combine(HttpContext.Server.MapPath("../Uploads"),
                                                Path.GetFileName(uploadFile.FileName));
                 if (Path.GetExtension(filePath) != ".txt")
-                    return RedirectToAction("Index");
+                    return new EmptyResult();
 
-                uploadFile.SaveAs(filePath);
+                /*uploadFile.SaveAs(filePath);
                 int result = 0;
                 WebScraper ws = new WebScraper(filePath);
                 Thread thread = new Thread(() => { result = ws.BeginScrape(); });
                 thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
                 thread.Start();
-                thread.Join();
+                thread.Join();*/
             }
             
-            return RedirectToAction("Index");
+            return new EmptyResult();
         }
     }
 }

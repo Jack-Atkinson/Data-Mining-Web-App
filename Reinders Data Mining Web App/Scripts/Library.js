@@ -63,38 +63,62 @@ var UI = (function () {
         navigation.Init();
         iframeControl.Init();
 
+        navigation.GoTo("http://www.reinders.com");
+
     };
 
     var navigation = (function () {
+        var _bstack = [];
+        var _fstack = [];
+        var _currentUrl = "";
+        var _targetframe = {};
+
 
         var init = function () {
+
+            _targetframe = document.getElementById('targetframe');
+
             $('#urlinput').keyup(function (e) {
                 if (e.which == 13)
                     navigation.GoTo($('#urlinput').val());
             });
 
             $('#refresh').click(function () {
-                navigation.GoTo($('#urlinput').val());
+                navigation.GoTo($('#urlinput').val()); //adds page to bstack, maybe fix?
             });
+
+            $('#backwards').click(function () {
+                jumpToFrom(_bstack, _fstack);
+            });
+
+            $('#forwards').click(function () {
+                jumpToFrom(_fstack, _bstack);
+            });
+
+            $('#backwards').prop('disabled', true);
+            $('#forwards').prop('disabled', true);
+
         };
 
         var goto = function (url) {
             if (_blocking)
                 return;
             loading();
-            $('#urlinput').val(url);
             if (!isValid(url)) {
                 error()
                 return false;
             }
+            $('#urlinput').val(url);
             $.ajax({
                 url: '/Home/Goto',
                 method: 'GET',
                 dataType: 'json',
                 data: { url: url },
                 success: function (pagesource) {
+                    updateBStack();
+                    _currentUrl = $('#urlinput').val();
                     var srcblob = new Blob([pagesource], { type: "text/html" });
-                    $('#targetframe').attr('src', window.URL.createObjectURL(srcblob));
+                    _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
                     success();
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
@@ -119,9 +143,11 @@ var UI = (function () {
                     target: target,
                 },
                 success: function (result) {
-                    $('#urlinput').val(result.Url)
+                    updateBStack();
+                    _currentUrl = result.Url;
+                    $('#urlinput').val(_currentUrl)
                     var srcblob = new Blob([result.Src], { type: "text/html" });
-                    $('#targetframe').attr('src', window.URL.createObjectURL(srcblob));
+                    _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
                     success();
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
@@ -132,6 +158,38 @@ var UI = (function () {
             });
         };
 
+        var updateBStack = function () {
+            if (_currentUrl != "" &&
+                _targetframe.contentWindow.location.href != "about:blank") {
+                _bstack.unshift({ url: _currentUrl, blob: _targetframe.contentWindow.location.href });
+                $('#backwards').prop('disabled', false);
+            }
+            if (_fstack.length > 0) {
+                if (_currentUrl != _fstack[0].url) {
+                    _fstack = [];
+                    $('#forwards').prop('disabled', true);
+                }
+            }
+        };
+
+        var jumpToFrom = function (stackT, stackF) {
+            if (stackT.length > 0) {
+                stackF.unshift({ url: _currentUrl, blob: _targetframe.contentWindow.location.href });
+                _targetframe.contentWindow.location.replace(stackT[0].blob);
+                $('#urlinput').val(stackT[0].url);
+                _currentUrl = stackT[0].url;
+                stackT.shift();
+                if (!_bstack.length)
+                    $('#backwards').prop('disabled', true);
+                else
+                    $('#backwards').prop('disabled', false);
+                if (!_fstack.length)
+                    $('#forwards').prop('disabled', true);
+                else
+                    $('#forwards').prop('disabled', false);
+            }
+        };
+
         var isValid = function (url) {
             var linkRegexFilter = '^(?!mailto:)(?:(?:http|https|ftp)://)(?:\\S+(?::\\S*)?@@)?(?:(?:(?:[1-9]\\d?|1\\d\\d|2[01]\\d|22[0-3])(?:\\.(?:1?\\d{1,2}|2[0-4]\\d|25[0-5])){2}(?:\\.(?:[0-9]\\d?|1\\d\\d|2[0-4]\\d|25[0-4]))|(?:(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)(?:\\.(?:[a-z\\u00a1-\\uffff0-9]+-?)*[a-z\\u00a1-\\uffff0-9]+)*(?:\\.(?:[a-z\\u00a1-\\uffff]{2,})))|localhost)(?::\\d{2,5})?(?:(/|\\?|#)[^\\s]*)?$';
             var linkRegex = new RegExp(linkRegexFilter, 'i');
@@ -139,7 +197,7 @@ var UI = (function () {
                 return true;
             else
                 return false;
-        }
+        };
 
         var error = function () {
             $('#urlwrapper').removeClass('has-warning');
@@ -161,11 +219,11 @@ var UI = (function () {
             $('#elementselector').removeAttr('style');
             $('#elementselector').hide();
             _blocking = false;
-        }
+        };
 
         var loading = function () {
             $('#elementselector').removeAttr('style');
-            $('#elementselector').css({
+            $('#elementselector').css({ //to stop user from making additional requests to the server during blocking
                 'position': 'absolute',
                 'left': 0,
                 'top': 0,
@@ -186,40 +244,59 @@ var UI = (function () {
             $('#failure').hide();
             $('#success').hide();
             _blocking = true;
-        }
+        };
 
         return {
             Init: init,
             GoTo: goto,
             Click: click,
-        }
+        };
 
     })();
 
     var iframeControl = (function () {
-        var _lastEventArg = {};
+
+        var _lastTarget = {};
 
         var init = function () {
 
             $(_iframe).load(function () {
                 $(this).contents().find('body').click( function (e) {
                     var url = e.target;
-                    navigation.Click(e.target);
+                    if (e.ctrlKey) {
+                        filterControl.Grab(e.target);
+                    } else {
+                        navigation.Click(e.target);
+                    }
+
                     return false;
                 });
 
                 $($(this).contents()).scroll(function (e) {
-                    updateSelector(_lastTarget);
+                    filterControl.UpdateSelector(_lastTarget);
                 })
 
                 $(this).contents().find("body").children().mouseover(function (e) {
-                    updateSelector(e.target);
+                    filterControl.UpdateSelector(e.target);
                     _lastTarget = e.target;
                     return false;
                 });
             });
 
         }
+
+        return {
+            Init: init,
+        }
+
+    })();
+
+    var filterControl = (function () {
+        var init = function () {
+
+        };
+
+
         var updateSelector = function (target) {
             var width = $(target).outerWidth();
             var height = $(target).outerHeight() < $(_iframe).height() ? $(target).outerHeight() : $(_iframe).height() - 20;
@@ -230,9 +307,9 @@ var UI = (function () {
                 height += position.top;
                 position.top = 0;
             }
-            if ((position.top + height) > $(_iframe).height()) {
+            if ((position.top + height) > $(_iframe).height()) { //add boundary checks for left and right sides
                 height -= (position.top + height) - $(_iframe).height();
-                        
+
             }
             $('#elementselector').css({
                 'position': 'absolute',
@@ -247,10 +324,22 @@ var UI = (function () {
             return false;
         };
 
+        var grab = function (target) {
+            $(target).css({
+            '-ms-filter': '"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"',
+            'filter': 'alpha(opacity=50)',
+            '-moz-opacity': '0.5',
+            '-khtml-opacity': '0.5',
+            'opacity': '0.5',
+            'pointer-events': 'auto',
+            'background-color': 'red'});
+        };
+
         return {
             Init: init,
+            UpdateSelector: updateSelector,
+            Grab: grab,
         }
-
     })();
 
     return {

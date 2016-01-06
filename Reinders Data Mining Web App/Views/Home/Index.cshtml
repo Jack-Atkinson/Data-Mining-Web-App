@@ -27,40 +27,45 @@
     </section>
     <section id="iframesection">
         <div id="iframewrapper">
-            <iframe id="targetframe" src="http://www.reinders.com"></iframe>
+            <iframe id="targetframe"></iframe>
             <div id="elementselector"></div>
         </div>
     </section>
     <section id="filtersection">
-        <div>
-            <div id="filterinputs">
-                <div class="row">
-                    <div class="col-xs-6 form-group">
-                        <label>Label1</label>
-                        <input class="form-control" type="text" />
-                    </div>
-                    <div class="col-xs-6 form-group">
-                        <label>Label2</label>
-                        <input class="form-control" type="text" />
-                    </div>
-                    <div class="col-xs-6">
-                        <div class="row">
-                            <label class="col-xs-12">Label3</label>
+        <div id="filterwrapper">
+            <div class="third">
+                <div id="customisation">
+                    <div id="selectorwrapper" class="form-inline">
+                        <div class="form-group">
+                            <label id="levellabel" for="level">Selector:</label>
                         </div>
-                        <div class="row">
-                            <div class="col-xs-12 col-sm-6">
-                                <input class="form-control" type="text" />
-                            </div>
-                            <div class="col-xs-12 col-sm-6">
-                                <input class="form-control" type="text" />
-                            </div>
+                        <div class="form-group">
+                            <button id="minusone" class="btn btn-default"><i class="glyphicon glyphicon-minus"></i></button>
+                        </div>
+                        <div id="selectorinnerwrapper" class="form-group">
+                            <input id="selector" type="text" class="form-control" spellcheck="false" readonly />
+                        </div>
+                        <div class="form-group">
+                            <button id="plusone" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
                         </div>
                     </div>
-                    <div class="col-xs-6 form-group">
-                        <label>Label4</label>
-                        <input class="form-control" type="text" />
+                    <div id="actionwrapper" class="form-inline"> <!--maybe make it so that the inputs go under the title instead of inline-->
+                        <div class="form-group">
+                            <label for="action">Action:</label>
+                            <select class="form-control" id="action">
+                                <option>Click</option>
+                                <option>Grab</option>
+                                <option>Ignore</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="third">
+                
+            </div>
+            <div class="third">
+                
             </div>
         </div>
     </section>

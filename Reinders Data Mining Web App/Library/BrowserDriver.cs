@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support;
+using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using HtmlAgilityPack;
 
@@ -29,22 +31,26 @@ namespace Reinders_Data_Mining_Web_App.Library
 
         public void Close()
         {
-            Driver.Close();
+            Driver.Quit();
         }
 
         public void GoTo(string url)
         {
             Driver.Navigate().GoToUrl(url);
-        }
-
-        public void LoadFromHtml(string html)
-        {
-
+            System.Threading.Thread.Sleep(500);
         }
 
         public void Click(string target)
         {
             Driver.FindElement(By.jQuery(target)).Click();
+            System.Threading.Thread.Sleep(500);
+        }
+
+        private void Wait()
+        {
+            WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(30.00));
+
+            wait.Until(driver1 => ((IJavaScriptExecutor)Driver).ExecuteScript("return document.readyState").Equals("complete"));
         }
 
         static public string GetHost(string url)

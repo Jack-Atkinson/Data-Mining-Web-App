@@ -89,7 +89,37 @@ body > section > div {
     height: 300px;
 }
 
-#filterinputs {
-    padding: 10px;
-    width: 50%;
+#filterwrapper{
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.third {
+    width: 33%;
+    overflow: auto;
+    height: 100%;
+    float: left;
+}
+
+#customisation {
+    margin: 10px;
+    font-size: 16px;
+}
+
+#customisation > div {
+    line-height: 48px;
+    display: flex;
+    width: 100%;
+}
+#customisation > div > div {
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+#selectorinnerwrapper {
+    width: 100%;
+}
+
+#selector {
+    width: 100%;
 }

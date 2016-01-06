@@ -116,6 +116,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\WebDriver.dll</HintPath>
     </Reference>
+    <Reference Include="WebDriver.Support, Version=2.48.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Dependencies\WebDriver.Support.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\FilterConfig.cs" />
@@ -130,8 +134,8 @@
     </Compile>
     <Compile Include="Library\ReadWriteCsv.cs" />
     <Compile Include="Library\SeleniumExtensions.cs" />
-    <Compile Include="Library\WebScraper.cs" />
     <Compile Include="Models\Filter.cs" />
+    <Compile Include="Models\Website.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +143,10 @@
     <Content Include="App_Data\Filters.mdf" />
     <Content Include="App_Data\Filters_log.ldf">
       <DependentUpon>Filters.mdf</DependentUpon>
+    </Content>
+    <Content Include="App_Data\Websites.mdf" />
+    <Content Include="App_Data\Websites_log.ldf">
+      <DependentUpon>Websites.mdf</DependentUpon>
     </Content>
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
@@ -149,14 +157,13 @@
     <Content Include="Content\remote.css" />
     <Content Include="Dependencies\Selenium.WebDriverBackedSelenium.dll" />
     <Content Include="Dependencies\WebDriver.dll" />
+    <Content Include="Dependencies\WebDriver.Support.dll" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\home.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="Scripts\i18n\defaults-en_US.js" />
-    <Content Include="Scripts\i18n\defaults-en_US.min.js" />
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
