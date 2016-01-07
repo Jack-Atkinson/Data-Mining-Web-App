@@ -80,12 +80,15 @@ body > section > div {
     border: 0;
 }
 
-#elementhighlighter {
-    position: absolute;
+
+
+.canvas-container {
+    position: absolute !important;
     top: 0;
     left: 0;
-    pointer-events: none;
+    pointer-events: none !important;
 }
+
 #elementselector {
     pointer-events: none;
     position: absolute;
@@ -96,19 +99,31 @@ body > section > div {
     height: 300px;
 }
 
-#filterwrapper{
+#filterwrapper {
     margin-left: 5%;
     margin-right: 5%;
 }
 
 .third {
-    width: 33%;
+    width: 32%;
     overflow: auto;
     height: 100%;
     float: left;
 }
 
-#customisation {
+.vr {
+    height: 100%;
+    width: 1px;
+    background: #666;
+    float: left;
+    background: red; /* For browsers that do not support gradients */
+    background: -webkit-linear-gradient(#ccc, #666, #ccc); /* For Safari 5.1 to 6.0 */
+    background: -o-linear-gradient(#ccc, #666, #ccc); /* For Opera 11.1 to 12.0 */
+    background: -moz-linear-gradient(#ccc, #666, #ccc); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#ccc, #666, #ccc); /* Standard syntax */
+}
+
+.third > div {
     margin: 10px;
     font-size: 16px;
 }
@@ -121,4 +136,13 @@ body > section > div {
 #customisation > div > div {
     margin-right: 5px;
     margin-left: 5px;
+}
+
+.filterItem {
+    width: 90%;
+    height: 30px;
+    margin-left: 5%;
+    margin-right: 5%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }

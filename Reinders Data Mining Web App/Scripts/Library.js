@@ -101,6 +101,10 @@ var UI = (function () {
             $('#backwards').prop('disabled', true);
             $('#forwards').prop('disabled', true);
 
+            $(_iframe).load(function () {
+                filterControl.UpdateCanvasDim($('#targetframe').contents().width(), $('#targetframe').contents().height());
+            })
+
         };
 
         var goto = function (url) {
@@ -162,7 +166,7 @@ var UI = (function () {
         var updateFrame = function (src) {
             var srcblob = new Blob([src], { type: "text/html" });
             _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
-            filterControl.UpdateCanvasDim($('#targetframe').contents().width(), $('#targetframe').contents().height());
+            filterControl.ClearCanvas();
         };
 
         var updateBStack = function () {
@@ -303,11 +307,12 @@ var UI = (function () {
         var _canvas;
 
         var init = function () {
-            _canvas = document.getElementById('elementhighlighter');
+            //var canvas = new fabric.Canvas('elementhighlighter');
+            _canvas = new fabric.Canvas('elementhighlighter');
             $(_iframe).load(function () {
-                $(_highlighter).css('margin-top', '');
+                $('div.canvas-container').css('margin-top', '');
                 $($(this).contents()).scroll(function () {
-                    $(_highlighter).css('margin-top', -$(this).scrollTop());
+                    $('div.canvas-container').css('margin-top', -$(this).scrollTop());
                 });
             });
         };
@@ -335,16 +340,35 @@ var UI = (function () {
         var grab = function (target) {
             $('#selector').val($(target).getSelector());
             if (confirm("Do you want to select this element?")) {
-                var ctx = _canvas.getContext('2d');
+
+                // create a rectangle object
+                var rect = new fabric.Rect({
+                    left: $(target).offset().left,
+                    top: $(target).offset().top,
+                    fill: 'red',
+                    width: $(target).outerWidth(),
+                    height: $(target).outerHeight(),
+                    opacity: 0.2
+                });
+
+                // "add" rectangle onto canvas
+                _canvas.add(rect);
+                /*var ctx = _canvas.getContext('2d');
                 ctx.globalAlpha = 0.4;
                 ctx.fillStyle = 'red';
-                ctx.fillRect($(target).offset().left, $(target).offset().top, $(target).outerWidth(), $(target).outerHeight());
+                ctx.fillRect($(target).offset().left, $(target).offset().top, $(target).outerWidth(), $(target).outerHeight());*/
             }
         };
 
         var updateCanvasDim = function (width, height) {
-            _canvas.width = width;
-            _canvas.height = height;
+            //$('div.canvas-container').width(width);
+            //$('div.canvas-container').height(height);
+            _canvas.setWidth(width);
+            _canvas.setHeight(height);
+        };
+
+        var clearCanvas = function () {
+            _canvas.clear();
         };
 
         var getHierarchy = function (target) {
@@ -354,13 +378,14 @@ var UI = (function () {
             $(_elementTree).parents().each(function () {
                 _elementTree.push(this);
             });
-        }
+        };
 
         return {
             Init: init,
             UpdateSelector: updateSelector,
             Grab: grab,
             UpdateCanvasDim: updateCanvasDim,
+            ClearCanvas: clearCanvas,
         }
     })();
 
