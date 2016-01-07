@@ -52,6 +52,7 @@ body > section > div {
 
 #iframewrapper {
     position: relative;
+    overflow: hidden;
 }
 
 #iframewrapper::before {
@@ -71,17 +72,23 @@ body > section > div {
     z-index: 1;
 }
 
-#elementselector {
-    pointer-events: none;
-    position: absolute;
-}
 
 #targetframe {
-    position: relative;
     display: block;
     width: 100%;
     height: 100%;
     border: 0;
+}
+
+#elementhighlighter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+#elementselector {
+    pointer-events: none;
+    position: absolute;
 }
 
 #filtersection {
@@ -114,12 +121,4 @@ body > section > div {
 #customisation > div > div {
     margin-right: 5px;
     margin-left: 5px;
-}
-
-#selectorinnerwrapper {
-    width: 100%;
-}
-
-#selector {
-    width: 100%;
 }

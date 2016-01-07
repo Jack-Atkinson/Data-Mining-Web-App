@@ -55,13 +55,16 @@
 var UI = (function () {
 
     var _iframe;
+    var _highlighter;
     var _blocking = false;
 
     var init = function () {
         _iframe = '#targetframe';
+        _highlighter = '#elementhighlighter';
 
         navigation.Init();
         iframeControl.Init();
+        filterControl.Init();
 
         navigation.GoTo("http://www.reinders.com");
 
@@ -117,8 +120,7 @@ var UI = (function () {
                 success: function (pagesource) {
                     updateBStack();
                     _currentUrl = $('#urlinput').val();
-                    var srcblob = new Blob([pagesource], { type: "text/html" });
-                    _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
+                    updateFrame(pagesource);
                     success();
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
@@ -146,8 +148,7 @@ var UI = (function () {
                     updateBStack();
                     _currentUrl = result.Url;
                     $('#urlinput').val(_currentUrl)
-                    var srcblob = new Blob([result.Src], { type: "text/html" });
-                    _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
+                    updateFrame(result.Src);
                     success();
                 },
                 error: function (xhr, ajaxOptions, thrownError) {
@@ -156,6 +157,12 @@ var UI = (function () {
                     error();
                 }
             });
+        };
+
+        var updateFrame = function (src) {
+            var srcblob = new Blob([src], { type: "text/html" });
+            _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
+            filterControl.UpdateCanvasDim($('#targetframe').contents().width(), $('#targetframe').contents().height());
         };
 
         var updateBStack = function () {
@@ -292,25 +299,26 @@ var UI = (function () {
     })();
 
     var filterControl = (function () {
-        var init = function () {
 
+        var _canvas;
+
+        var init = function () {
+            _canvas = document.getElementById('elementhighlighter');
+            $(_iframe).load(function () {
+                $(_highlighter).css('margin-top', '');
+                $($(this).contents()).scroll(function () {
+                    $(_highlighter).css('margin-top', -$(this).scrollTop());
+                });
+            });
         };
 
 
         var updateSelector = function (target) {
-            var width = $(target).outerWidth();
-            var height = $(target).outerHeight() < $(_iframe).height() ? $(target).outerHeight() : $(_iframe).height() - 20;
+            var width = $(target).outerWidth() < $(_iframe).width() ? $(target).outerWidth() : $(_iframe).width();
+            var height = $(target).outerHeight() < $(_iframe).height() ? $(target).outerHeight() : $(_iframe).height() - 20; //shadow is 20px
             var position = $(target).offset();
             position.left -= $(_iframe).contents().scrollLeft();
             position.top -= $(_iframe).contents().scrollTop();
-            if (position.top < 0) { //boundary checks
-                height += position.top;
-                position.top = 0;
-            }
-            if ((position.top + height) > $(_iframe).height()) { //add boundary checks for left and right sides
-                height -= (position.top + height) - $(_iframe).height();
-
-            }
             $('#elementselector').css({
                 'position': 'absolute',
                 'left': position.left,
@@ -325,20 +333,34 @@ var UI = (function () {
         };
 
         var grab = function (target) {
-            $(target).css({
-            '-ms-filter': '"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"',
-            'filter': 'alpha(opacity=50)',
-            '-moz-opacity': '0.5',
-            '-khtml-opacity': '0.5',
-            'opacity': '0.5',
-            'pointer-events': 'auto',
-            'background-color': 'red'});
+            $('#selector').val($(target).getSelector());
+            if (confirm("Do you want to select this element?")) {
+                var ctx = _canvas.getContext('2d');
+                ctx.globalAlpha = 0.4;
+                ctx.fillStyle = 'red';
+                ctx.fillRect($(target).offset().left, $(target).offset().top, $(target).outerWidth(), $(target).outerHeight());
+            }
         };
+
+        var updateCanvasDim = function (width, height) {
+            _canvas.width = width;
+            _canvas.height = height;
+        };
+
+        var getHierarchy = function (target) {
+            $('#level').val(0);
+            _elementTree = [];
+            _elementTree.push(target);
+            $(_elementTree).parents().each(function () {
+                _elementTree.push(this);
+            });
+        }
 
         return {
             Init: init,
             UpdateSelector: updateSelector,
             Grab: grab,
+            UpdateCanvasDim: updateCanvasDim,
         }
     })();
 

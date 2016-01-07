@@ -28,6 +28,7 @@
     <section id="iframesection">
         <div id="iframewrapper">
             <iframe id="targetframe"></iframe>
+            <canvas id="elementhighlighter"></canvas>
             <div id="elementselector"></div>
         </div>
     </section>
@@ -42,8 +43,8 @@
                         <div class="form-group">
                             <button id="minusone" class="btn btn-default"><i class="glyphicon glyphicon-minus"></i></button>
                         </div>
-                        <div id="selectorinnerwrapper" class="form-group">
-                            <input id="selector" type="text" class="form-control" spellcheck="false" readonly />
+                        <div class="form-group fullwidth">
+                            <input id="selector" type="text" class="form-control fullwidth" spellcheck="false" readonly />
                         </div>
                         <div class="form-group">
                             <button id="plusone" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
@@ -52,8 +53,9 @@
                     <div id="actionwrapper" class="form-inline"> <!--maybe make it so that the inputs go under the title instead of inline-->
                         <div class="form-group">
                             <label for="action">Action:</label>
-                            <select class="form-control" id="action">
-                                <option>Click</option>
+                        </div>
+                        <div class="form-group fullwidth">
+                            <select class="form-control fullwidth" id="action">
                                 <option>Grab</option>
                                 <option>Ignore</option>
                             </select>

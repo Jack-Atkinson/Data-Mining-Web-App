@@ -28,3 +28,7 @@ body {
 .textalignc {
     text-align: center;
 }
+
+.fullwidth {
+    width: 100% !important;
+}
