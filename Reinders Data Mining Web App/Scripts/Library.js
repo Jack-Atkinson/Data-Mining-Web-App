@@ -309,6 +309,15 @@ var UI = (function () {
         var init = function () {
             //var canvas = new fabric.Canvas('elementhighlighter');
             _canvas = new fabric.Canvas('elementhighlighter');
+
+            _canvas.on('object:added', function (object) {
+                object.target.setCoords()
+                _canvas.forEachObject(function (obj) {
+                    if (obj == object.target) return;
+                    obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                });
+            });
+
             $(_iframe).load(function () {
                 $('div.canvas-container').css('margin-top', '');
                 $($(this).contents()).scroll(function () {
@@ -348,8 +357,11 @@ var UI = (function () {
                     fill: 'red',
                     width: $(target).outerWidth(),
                     height: $(target).outerHeight(),
-                    opacity: 0.2
+                    stroke: '#FFF',
+                    strokewidth: 3,
+                    opacity: 0.5
                 });
+
 
                 // "add" rectangle onto canvas
                 _canvas.add(rect);
