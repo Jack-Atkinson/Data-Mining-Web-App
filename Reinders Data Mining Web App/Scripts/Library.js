@@ -103,6 +103,7 @@ var UI = (function () {
 
             $(_iframe).load(function () {
                 filterControl.UpdateCanvasDim($(this).contents().width(), $(this).contents().height());
+                filterControl.UpdateCanvas();
             })
 
         };
@@ -166,7 +167,6 @@ var UI = (function () {
         var updateFrame = function (src) {
             var srcblob = new Blob([src], { type: "text/html" });
             _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
-            filterControl.UpdateCanvas();
         };
 
         var updateBStack = function () {
@@ -279,6 +279,8 @@ var UI = (function () {
                     if (e.ctrlKey) {
                         filterControl.Grab(e.target);
                     } else {
+                        if (confirm("Do you want to record this click?"))
+                            filterControl.RecordClick(e.target);
                         navigation.Click(e.target);
                     }
 
@@ -309,6 +311,7 @@ var UI = (function () {
 
         var _canvas;
         var _elementTree = [];
+        var _tempOverlay;
 
         var init = function () {
             //var canvas = new fabric.Canvas('elementhighlighter');
@@ -330,11 +333,26 @@ var UI = (function () {
             });*/
 
             $('#minusone').click(function () {
-
+                updateGrabArea(false);
             });
 
             $('#plusone').click(function () {
                 updateGrabArea(true);
+            });
+
+            $('#action').change(function () {
+                changeAction($('#action').val());
+            });
+
+            $('#delete').click(function () {
+
+                resetFilter(); //gotta remove filter overlay from canvas too
+            });
+
+            $('#record').click(function () {
+                _tempOverlay = null;
+                recordEvent();
+                resetFilter();
             });
         };
 
@@ -359,73 +377,164 @@ var UI = (function () {
         };
 
         var updateGrabArea = function (up) {
-            var down = !up;
+            if (!$($(_iframe).contents().find($('#selector').val())).length)
+                return;
+            var element = $('#selector').val();
             if (up) {
-                if ($($(_iframe).contents().find($('#selector').val())).length) {
-                    var element = $(_iframe).contents().find($('#selector').val());
-                    _canvas.forEachObject(function (obj) {
-                        //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
-                        if(obj.width == $(element).outerWidth() &&
-                           obj.height == $(element).outerHeight()) {
-                            getHierarchy(element);
-                            var currentVal = parseInt($('#selectorlevel').val());
-                            $('#selectorlevel').val(currentVal + 1); //boundary check this against elementtree count and make it work for $(#minusone)
-                            var currentVal = parseInt($('#selectorlevel').val());
-
-                            obj.set({
-                                'height': $(_elementTree[currentVal]).outerHeight(),
-                                'width': $(_elementTree[currentVal]).outerWidth(),
-                                'top': $(_elementTree[currentVal]).offset().top,
-                                'left': $(_elementTree[currentVal]).offset().left,
-                            });
-                            $('#selector').val($(_elementTree[currentVal]).getSelector());
-                            _canvas.renderAll();
-                        }
+                var obj = getItemInCanvas(element);
+                var currentVal = parseInt($('#selectorlevel').val());
+                if ((currentVal + 1) < _elementTree.length) {
+                    $('#selectorlevel').val(currentVal + 1);
+                
+                    var currentVal = parseInt($('#selectorlevel').val());
+                    obj.set({
+                        'height': $(_elementTree[currentVal]).outerHeight(),
+                        'width': $(_elementTree[currentVal]).outerWidth(),
+                        'top': $(_elementTree[currentVal]).offset().top,
+                        'left': $(_elementTree[currentVal]).offset().left,
                     });
+                    $('#selector').val($(_elementTree[currentVal]).getSelector());
+                    _canvas.renderAll();
                 }
+            } else {
+                var obj = getItemInCanvas(element);
+                var currentVal = parseInt($('#selectorlevel').val());
+                if (currentVal > 0) {
+                    $('#selectorlevel').val(currentVal - 1);
+                
+                    var currentVal = parseInt($('#selectorlevel').val());
+                    obj.set({
+                        'height': $(_elementTree[currentVal]).outerHeight(),
+                        'width': $(_elementTree[currentVal]).outerWidth(),
+                        'top': $(_elementTree[currentVal]).offset().top,
+                        'left': $(_elementTree[currentVal]).offset().left,
+                    });
+                    $('#selector').val($(_elementTree[currentVal]).getSelector());
+                    _canvas.renderAll();
+                }
+                return obj;
             }
 
         };
 
         var grab = function (target) {
+
+            resetFilter();
+            if (_tempOverlay)
+                _tempOverlay.remove();
             $('#selector').val($(target).getSelector());
-            if (confirm("Do you want to select this element?")) {
+            var rect = new fabric.Rect({
+                left: $(target).offset().left,
+                top: $(target).offset().top,
+                fill: new fabric.Color('rgb(10, 20, 30)'),
+                width: $(target).outerWidth(),
+                height: $(target).outerHeight(),
+                stroke: '#FFF',
+                strokewidth: 3,
+                opacity: 0.5
+            });
+            _tempOverlay = rect;
 
-                // create a rectangle object
-                var rect = new fabric.Rect({
-                    left: $(target).offset().left,
-                    top: $(target).offset().top,
-                    fill: new fabric.Color('rgb(10, 20, 30)'),
-                    width: $(target).outerWidth(),
-                    height: $(target).outerHeight(),
-                    stroke: '#FFF',
-                    strokewidth: 3,
-                    opacity: 0.5
-                });
+            getHierarchy(target);
+
+            /*_canvas.forEachObject(function (obj) {
+                //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                if (rect.intersectsWithObject(obj)) {
+                    object.target.setOpacity(obj.getOpacity() / 2);
+                    debug
+
+                }
+            });*/
 
 
-                /*_canvas.forEachObject(function (obj) {
-                    //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
-                    if (rect.intersectsWithObject(obj)) {
-                        object.target.setOpacity(obj.getOpacity() / 2);
-                        debug
+            // "add" rectangle onto canvas
+            _canvas.add(rect);
+            /*var ctx = _canvas.getContext('2d');
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = 'red';
+            ctx.fillRect($(target).offset().left, $(target).offset().top, $(target).outerWidth(), $(target).outerHeight());*/
+        };
+        
+        var resetFilter = function () {
+            $('#selector').val('');
+            $('#action').val(0);
+            $('#column').val('');
+            $('#required').prop('checked', false);
+        };
 
-                    }
-                });*/
-
-
-                // "add" rectangle onto canvas
-                _canvas.add(rect);
-                /*var ctx = _canvas.getContext('2d');
-                ctx.globalAlpha = 0.4;
-                ctx.fillStyle = 'red';
-                ctx.fillRect($(target).offset().left, $(target).offset().top, $(target).outerWidth(), $(target).outerHeight());*/
+        var changeAction = function (action) {
+            var obj = getItemInCanvas($('#selector').val());
+            if (!obj)
+                return;
+            switch (action) {
+                case "0":
+                    obj.set('fill', new fabric.Color('rgb(10, 20, 30)'));
+                    break;
+                case "1":
+                    obj.set('fill', 'red');
+                    $('#column').val($('#selector').val());
+                    break;
+                case "2":
+                    break;
+                default:
+                    break;
             }
+            _canvas.renderAll();
+        };
+
+        var recordEvent = function () {
+            var selector = $('#selector').val();
+            var actionval = $('#action').val();
+            var actiontxt = $('#action option:selected').text();
+            var column = $('#column').val();
+            var required = $('#required').prop('checked');
+            var filterItem = '<div class="filteritem"><div class="' + (required ? 'glyphicon glyphicon-star' : 'glyphiconempty') + '"></div><div>' + actiontxt + '</div><div>' + column + '</div></div>';
+            $('#filtercontainer').append(filterItem);
+
+        };
+
+        var recordClick = function (element) {
+            $('#selector').val($(element).getSelector());
+            $('#action').val(2);
+            $('#column').val($(element).text())
+            $('#required').prop('checked', true);
+            recordEvent();
+            resetFilter();
+        };
+
+        var getItemInCanvas = function (element) {
+            var canvasObjs = []
+            _canvas.forEachObject(function (obj) {
+                //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                canvasObjs.push(obj);
+            });
+            for(var i = 0; i < canvasObjs.length; i++) {
+                if (canvasObjs[i].width == $(_iframe).contents().find(element).outerWidth() &&
+                    canvasObjs[i].height == $(_iframe).contents().find(element).outerHeight() &&
+                    canvasObjs[i].left == $(_iframe).contents().find(element).offset().left) {
+                    return canvasObjs[i];
+                }
+            }
+            return null;
+        };
+
+        var updateFilterList = function () {
+            $.ajax({
+                url: '/Home/GetFilters',
+                method: 'GET',
+                dataType: 'json',
+                data: { Domain: url },
+                success: function (srcDoc) {
+                    callback(srcDoc);
+                },
+                error: function (error) {
+                    alert(error);
+                    callback("invalid");
+                }
+            })
         };
 
         var updateCanvasDim = function (width, height) {
-            //$('div.canvas-container').width(width);
-            //$('div.canvas-container').height(height);
             _canvas.setWidth(width);
             _canvas.setHeight(height);
         };
@@ -450,6 +559,7 @@ var UI = (function () {
             Grab: grab,
             UpdateCanvasDim: updateCanvasDim,
             UpdateCanvas: updateCanvas,
+            RecordClick: recordClick,
         }
     })();
 

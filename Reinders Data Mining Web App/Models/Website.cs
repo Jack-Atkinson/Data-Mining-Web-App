@@ -12,6 +12,6 @@ namespace Reinders_Data_Mining_Web_App.Models
 
     public class WebsiteDBContext : DbContext
     {
-        public DbSet<Website> Filters { get; set; }
+        public DbSet<Website> Websites { get; set; }
     }
 }

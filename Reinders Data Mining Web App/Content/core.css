@@ -32,3 +32,7 @@ body {
 .fullwidth {
     width: 100% !important;
 }
+
+.glyphiconempty {
+    width: 16px;
+}

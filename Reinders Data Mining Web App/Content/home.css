@@ -145,6 +145,17 @@ body > section > div {
     margin-left: 5px;
 }
 
+#required {
+    margin: 0;
+}
+
+#delete {
+    position: absolute;
+    bottom: 17px;
+    right: 135px;
+    float: right;
+}
+
 #record {
     position: absolute;
     bottom: 17px;
@@ -205,7 +216,7 @@ body > section > div {
 }
 
 .filteritem div:nth-child(2) {
-    width: 100%;
+    width: 50%;
 }
 
 .filteritem:hover {

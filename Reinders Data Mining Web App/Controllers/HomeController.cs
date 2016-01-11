@@ -22,6 +22,10 @@ namespace Reinders_Data_Mining_Web_App.Controllers
 {
     public class HomeController : Controller
     {
+
+        private FilterDBContext filterDb = new FilterDBContext();
+        private WebsiteDBContext websiteDb = new WebsiteDBContext();
+
         // GET: Home
         public ActionResult Index()
         {
@@ -50,6 +54,34 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             var result = new { Url = browser.Url, Src = source };
             browser.Close();
             return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public JsonResult AddFilter([Bind(Include = "Selector, Action, Required, Strip, Column, Order")] Models.Filter filter)
+        {
+            if(ModelState.IsValid)
+            {
+                filterDb.Filters.Add(filter);
+                filterDb.SaveChanges();
+                return Json(true, JsonRequestBehavior.DenyGet);
+            }
+            return Json(false, JsonRequestBehavior.DenyGet);
+        }
+
+        [HttpPost]
+
+        public JsonResult GetFilters(string Domain)
+        {
+            if (Domain == null)
+            {
+                return Json(false, JsonRequestBehavior.AllowGet);
+            }
+            List<Models.Website> websites = websiteDb.Websites.Where(x => x.Domain == Domain).ToList();
+            if (websites == null)
+            {
+                return Json(false, JsonRequestBehavior.AllowGet);
+            }
+            return Json(websites, JsonRequestBehavior.AllowGet);
         }
 
 
