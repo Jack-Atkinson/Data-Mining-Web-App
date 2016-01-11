@@ -102,13 +102,20 @@ body > section > div {
 #filterwrapper {
     margin-left: 5%;
     margin-right: 5%;
+    height: inherit;
 }
 
 .third {
-    width: 32%;
+    width: 33.28%;
     overflow: auto;
     height: 100%;
     float: left;
+    position: relative;
+}
+
+#midfiltersection {
+    overflow: hidden;
+    height: inherit;
 }
 
 .vr {
@@ -138,11 +145,69 @@ body > section > div {
     margin-left: 5px;
 }
 
-.filterItem {
-    width: 90%;
-    height: 30px;
-    margin-left: 5%;
-    margin-right: 5%;
+#record {
+    position: absolute;
+    bottom: 17px;
+    right: 15px;
+    float: right;
+}
+
+#titlewrapper {
+    display: flex;
+    line-height: 48px;
+}
+
+#titlewrapper div {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+#titlewrapper div:first-child {
+    margin-left: 10px;
+}
+
+#titlewrapper div:last-child {
+    margin-right: 10px;
+}
+
+#filtercontainer {
+    margin-top: 17px;
+    overflow-y: scroll;
+    height: calc(100% - 97px);
+}
+
+.filteritem {
+    width: 96%;
+    height: 48px;
+    margin-left: 2%;
+    margin-right: 2%;
     border: 1px solid #ccc;
     border-radius: 4px;
+    line-height: 46px;
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.filteritem div {
+    margin-left: 5px;
+    margin-right: 5px;
+    display: inline;
+}
+.filteritem div:first-child {
+    margin-left: 10px;
+    line-height: inherit;
+    top: 0;
+}
+
+.filteritem div:last-child {
+    margin-right: 10px;
+    overflow: hidden;
+}
+
+.filteritem div:nth-child(2) {
+    width: 100%;
+}
+
+.filteritem:hover {
+    background-color: #ccc;
 }

@@ -38,6 +38,7 @@
             <div class="third">
                 <div id="customisation">
                     <div id="selectorwrapper" class="form-inline">
+                        <input type="hidden" id="selectorlevel">
                         <div class="form-group">
                             <label id="levellabel" for="level">Selector:</label>
                         </div>
@@ -59,27 +60,89 @@
                             <select class="form-control fullwidth" id="action">
                                 <option>Grab</option>
                                 <option>Ignore</option>
+                                <option>Click</option>
                             </select>
                         </div>
                     </div>
+                    <div id="columnwrapper" class="form-inline">
+                        <!--maybe make it so that the inputs go under the title instead of inline-->
+                        <div class="form-group">
+                            <label for="column">Column:</label>
+                        </div>
+                        <div class="form-group fullwidth">
+                            <input id="column" type="text" class="form-control fullwidth" spellcheck="false"/>
+                        </div>
+                    </div>
+                </div>
+                <button id="record" class="btn btn-default">Record Event</button>
+            </div>
+            <div class="vr"></div>
+            <div id="midfiltersection" class="third">
+
+                <div id="titlewrapper" class="form-inline">
+                    <!--maybe make it so that the inputs go under the title instead of inline-->
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                    </div>
+                    <div class="form-group fullwidth">
+                        <input id="title" type="text" class="form-control fullwidth" spellcheck="false" />
+                    </div>
+                    <div class="form-group">
+                        <button id="savefilters" class="btn btn-default">Save</button>
+                    </div>
+                </div>
+                <div id="filtercontainer">
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
+                    </div>
                 </div>
             </div>
             <div class="vr"></div>
             <div class="third">
-                <div class="filterItem">
-                    <div class="form-group">
-
+                <div id="masterfiltercontainer">
+                    <div class="filteritem">
+                        <div class="glyphicon glyphicon-star"></div>
+                        <div>Ignore</div>
+                        <div>Descriptionffffffffffffffffffffffffffffffffffgggggggggggggggggggggggggggggggggggggggggggggggg</div>
                     </div>
                 </div>
-                <div class="filterItem form-group">
-                    <div class="form-group">
-
-                    </div>
-                </div>
-            </div>
-            <div class="vr"></div>
-            <div class="third">
-                
             </div>
         </div>
     </section>

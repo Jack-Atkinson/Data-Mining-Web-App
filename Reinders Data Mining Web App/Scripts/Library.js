@@ -102,7 +102,7 @@ var UI = (function () {
             $('#forwards').prop('disabled', true);
 
             $(_iframe).load(function () {
-                filterControl.UpdateCanvasDim($('#targetframe').contents().width(), $('#targetframe').contents().height());
+                filterControl.UpdateCanvasDim($(this).contents().width(), $(this).contents().height());
             })
 
         };
@@ -166,7 +166,7 @@ var UI = (function () {
         var updateFrame = function (src) {
             var srcblob = new Blob([src], { type: "text/html" });
             _targetframe.contentWindow.location.replace(window.URL.createObjectURL(srcblob));
-            filterControl.ClearCanvas();
+            filterControl.UpdateCanvas();
         };
 
         var updateBStack = function () {
@@ -272,6 +272,8 @@ var UI = (function () {
         var init = function () {
 
             $(_iframe).load(function () {
+                $('div.canvas-container').css('margin-top', '');
+
                 $(this).contents().find('body').click( function (e) {
                     var url = e.target;
                     if (e.ctrlKey) {
@@ -284,6 +286,7 @@ var UI = (function () {
                 });
 
                 $($(this).contents()).scroll(function (e) {
+                    $('div.canvas-container').css('margin-top', -$(this).scrollTop());
                     filterControl.UpdateSelector(_lastTarget);
                 })
 
@@ -305,24 +308,33 @@ var UI = (function () {
     var filterControl = (function () {
 
         var _canvas;
+        var _elementTree = [];
 
         var init = function () {
             //var canvas = new fabric.Canvas('elementhighlighter');
             _canvas = new fabric.Canvas('elementhighlighter');
 
-            _canvas.on('object:added', function (object) {
+            $('#selectorlevel').val(0);
+
+            /*_canvas.on('object:added', function (object) {
                 object.target.setCoords()
                 _canvas.forEachObject(function (obj) {
                     if (obj == object.target) return;
-                    obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                    //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                    if (object.target.intersectsWithObject(obj)) {
+                        object.target.setOpacity(obj.getOpacity() / 2);
+                        debug
+
+                    }
                 });
+            });*/
+
+            $('#minusone').click(function () {
+
             });
 
-            $(_iframe).load(function () {
-                $('div.canvas-container').css('margin-top', '');
-                $($(this).contents()).scroll(function () {
-                    $('div.canvas-container').css('margin-top', -$(this).scrollTop());
-                });
+            $('#plusone').click(function () {
+                updateGrabArea(true);
             });
         };
 
@@ -343,7 +355,36 @@ var UI = (function () {
                 'pointer-events': 'none'
             });
             $('#elementselector').show();
-            return false;
+            return;
+        };
+
+        var updateGrabArea = function (up) {
+            var down = !up;
+            if (up) {
+                if ($($(_iframe).contents().find($('#selector').val())).length) {
+                    var element = $(_iframe).contents().find($('#selector').val());
+                    _canvas.forEachObject(function (obj) {
+                        //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                        if(obj.width == $(element).outerWidth() &&
+                           obj.height == $(element).outerHeight()) {
+                            getHierarchy(element);
+                            var currentVal = parseInt($('#selectorlevel').val());
+                            $('#selectorlevel').val(currentVal + 1); //boundary check this against elementtree count and make it work for $(#minusone)
+                            var currentVal = parseInt($('#selectorlevel').val());
+
+                            obj.set({
+                                'height': $(_elementTree[currentVal]).outerHeight(),
+                                'width': $(_elementTree[currentVal]).outerWidth(),
+                                'top': $(_elementTree[currentVal]).offset().top,
+                                'left': $(_elementTree[currentVal]).offset().left,
+                            });
+                            $('#selector').val($(_elementTree[currentVal]).getSelector());
+                            _canvas.renderAll();
+                        }
+                    });
+                }
+            }
+
         };
 
         var grab = function (target) {
@@ -354,13 +395,23 @@ var UI = (function () {
                 var rect = new fabric.Rect({
                     left: $(target).offset().left,
                     top: $(target).offset().top,
-                    fill: 'red',
+                    fill: new fabric.Color('rgb(10, 20, 30)'),
                     width: $(target).outerWidth(),
                     height: $(target).outerHeight(),
                     stroke: '#FFF',
                     strokewidth: 3,
                     opacity: 0.5
                 });
+
+
+                /*_canvas.forEachObject(function (obj) {
+                    //obj.setOpacity(object.target.intersectsWithObject(obj) ? 0.1 : 0.2);
+                    if (rect.intersectsWithObject(obj)) {
+                        object.target.setOpacity(obj.getOpacity() / 2);
+                        debug
+
+                    }
+                });*/
 
 
                 // "add" rectangle onto canvas
@@ -379,15 +430,16 @@ var UI = (function () {
             _canvas.setHeight(height);
         };
 
-        var clearCanvas = function () {
+        var updateCanvas = function () {
             _canvas.clear();
+            //poll server for stuff to draw on canvas
         };
 
         var getHierarchy = function (target) {
-            $('#level').val(0);
             _elementTree = [];
+            $('#selectorlevel').val(0);
             _elementTree.push(target);
-            $(_elementTree).parents().each(function () {
+            $(_elementTree[0]).parents().each(function () {
                 _elementTree.push(this);
             });
         };
@@ -397,7 +449,7 @@ var UI = (function () {
             UpdateSelector: updateSelector,
             Grab: grab,
             UpdateCanvasDim: updateCanvasDim,
-            ClearCanvas: clearCanvas,
+            UpdateCanvas: updateCanvas,
         }
     })();
 
