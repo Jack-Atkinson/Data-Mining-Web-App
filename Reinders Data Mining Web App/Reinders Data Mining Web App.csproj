@@ -134,6 +134,7 @@
     </Compile>
     <Compile Include="Library\ReadWriteCsv.cs" />
     <Compile Include="Library\SeleniumExtensions.cs" />
+    <Compile Include="Library\WebScraper.cs" />
     <Compile Include="Models\Filter.cs" />
     <Compile Include="Models\Website.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

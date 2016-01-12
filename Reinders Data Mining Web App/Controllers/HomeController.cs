@@ -48,7 +48,12 @@ namespace Reinders_Data_Mining_Web_App.Controllers
         {
             BrowserDriver browser = new BrowserDriver();
             browser.GoTo(url);
-            browser.Click(target);
+            bool good = browser.Click(target);
+            if (!good)
+            {
+                browser.Close();
+                return Json(good, JsonRequestBehavior.AllowGet);
+            }
             string source = browser.PageSource;
             UpdateBase(ref source, url);
             var result = new { Url = browser.Url, Src = source};
@@ -151,18 +156,14 @@ namespace Reinders_Data_Mining_Web_App.Controllers
                 string filePath = Path.Combine(HttpContext.Server.MapPath("../Uploads"),
                                                Path.GetFileName(uploadFile.FileName));
                 if (Path.GetExtension(filePath) != ".txt")
-                    return new EmptyResult();
+                    return View("Index");
 
-                /*uploadFile.SaveAs(filePath);
-                int result = 0;
+                uploadFile.SaveAs(filePath);
                 WebScraper ws = new WebScraper(filePath);
-                Thread thread = new Thread(() => { result = ws.BeginScrape(); });
-                thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
-                thread.Start();
-                thread.Join();*/
+                ws.BeginScrape();
             }
             
-            return new EmptyResult();
+            return View("Index");
         }
     }
 }

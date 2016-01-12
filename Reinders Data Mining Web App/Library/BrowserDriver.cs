@@ -40,10 +40,34 @@ namespace Reinders_Data_Mining_Web_App.Library
             System.Threading.Thread.Sleep(500);
         }
 
-        public void Click(string target)
+        public bool Click(string target)
         {
-            Driver.FindElement(By.jQuery(target)).Click();
+            try
+            {
+                Driver.FindElement(By.jQuery(target)).Click();
+            } 
+            catch
+            {
+                return false;
+            }
             System.Threading.Thread.Sleep(500);
+            return true;
+        }
+
+        public string GetElement(string target, bool includeOuter)
+        {
+            string outerHtml = null;
+            try
+            {
+                outerHtml = includeOuter ?
+                    Driver.FindElement(By.jQuery(target)).GetAttribute("outerHTML") :
+                    Driver.FindElement(By.jQuery(target)).GetAttribute("innerHTML"); //outerHTML
+            }
+            catch
+            {
+                return outerHtml;
+            }
+            return outerHtml;
         }
 
         private void Wait()
