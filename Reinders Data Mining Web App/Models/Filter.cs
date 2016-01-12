@@ -11,7 +11,6 @@ namespace Reinders_Data_Mining_Web_App.Models
         public string GUID { get; set; }
         public int Strip { get; set; }
         public string Column { get; set; }
-        public int Order { get; set; }
 
     }
 

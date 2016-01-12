@@ -101,11 +101,6 @@ var UI = (function () {
             $('#backwards').prop('disabled', true);
             $('#forwards').prop('disabled', true);
 
-            $(_iframe).load(function () {
-                filterControl.UpdateCanvasDim($(this).contents().width(), $(this).contents().height());
-                filterControl.UpdateCanvas();
-            })
-
         };
 
         var goto = function (url) {
@@ -312,6 +307,9 @@ var UI = (function () {
         var _canvas;
         var _elementTree = [];
         var _tempOverlay;
+        var _clusterGUID
+        var _selectedFilter;
+        var _selectors = [];
 
         var init = function () {
             //var canvas = new fabric.Canvas('elementhighlighter');
@@ -345,7 +343,7 @@ var UI = (function () {
             });
 
             $('#delete').click(function () {
-
+                deleteFilter();
                 resetFilter(); //gotta remove filter overlay from canvas too
             });
 
@@ -353,6 +351,31 @@ var UI = (function () {
                 _tempOverlay = null;
                 recordEvent();
                 resetFilter();
+            });
+
+            $('#savefilters').click(function () {
+
+            });
+
+            $('#filtercontainer').on('click', '.filteritem', function () {
+                selectFilter($(this).attr('id'));
+            });
+
+            $('#filtercontainer').on('mousedown', '.filteritem', function () {
+                $(this).css('background-color', '#888')
+            });
+
+            $('#filtercontainer').on('mouseup', '.filteritem', function () {
+                $(this).css('background-color', '');
+            });
+
+            $('#clustercontainer').on('click', '.clusteritem', function () {
+                selectCluster($(this).attr('id'));
+            });
+
+            $(_iframe).load(function () {
+                updateCanvasDim($(this).contents().width(), $(this).contents().height());
+                updateClusterList();
             });
         };
 
@@ -484,12 +507,61 @@ var UI = (function () {
 
         var recordEvent = function () {
             var selector = $('#selector').val();
-            var actionval = $('#action').val();
-            var actiontxt = $('#action option:selected').text();
+            var action = parseInt($('#action').val());
             var column = $('#column').val();
             var required = $('#required').prop('checked');
-            var filterItem = '<div class="filteritem"><div class="' + (required ? 'glyphicon glyphicon-star' : 'glyphiconempty') + '"></div><div>' + actiontxt + '</div><div>' + column + '</div></div>';
-            $('#filtercontainer').append(filterItem);
+            if (!selector || !column) {
+                alert('Missing required fields');
+                return;
+            }
+            if (!_selectedFilter)
+                $.ajax({
+                    url: '/Home/AddFilter',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        Selector: selector,
+                        Action: action,
+                        Required: required,
+                        GUID: _clusterGUID,
+                        Strip: null,
+                        Column: column
+                    },
+                    success: function (result) {
+                        result ? updateFilterList() : alert("Could not save filter!");
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+                });
+            else {
+                $.ajax({
+                    url: '/Home/UpdateFilter',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        Id: _selectedFilter,
+                        Selector: selector,
+                        Action: action,
+                        Required: required,
+                        GUID: _clusterGUID,
+                        Column: column
+                    },
+                    success: function (result) {
+                        result ? updateFilterList() : alert("Could not save filter!");
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.status);
+                        alert(thrownError);
+                    }
+                });
+                _selectedFilter = null;
+            }
+
+
+            //var filterItem = '<div class="filteritem"><div class="' + (required ? 'glyphicon glyphicon-star' : 'glyphiconempty') + '"></div><div>' + actiontxt + '</div><div>' + column + '</div></div>';
+            //$('#filtercontainer').append(filterItem);
 
         };
 
@@ -518,20 +590,122 @@ var UI = (function () {
             return null;
         };
 
+        var updateClusterList = function () {
+            $('#clustercontainer').empty();
+            var domain = $(_iframe).contents().find('base').attr('href');
+            $.ajax({
+                url: '/Home/GetClusters',
+                method: 'GET',
+                dataType: 'json',
+                data: { Domain: domain },
+                success: function (clusters) {
+                    if (!clusters.length) {
+                        alert("Server returned no website clusters, at least 1 expected! Try refreshing the page.");
+                    } else {
+                        for (var i = 0; i < clusters.length; i++) {
+                            var name = clusters[i].Name;
+                            var guid = clusters[i].GUID;
+                            var clusterItem = '<div id="' + guid + '" class="clusteritem"><div class="glyphicon glyphicon-list"></div><div>' + name + '</div></div>';
+                            $('#clustercontainer').append(clusterItem);
+                        }
+                        selectCluster(clusters[0].GUID);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                }
+            });
+        };
+
         var updateFilterList = function () {
+            $('#filtercontainer').empty();
+            _selectors = [];
             $.ajax({
                 url: '/Home/GetFilters',
                 method: 'GET',
                 dataType: 'json',
-                data: { Domain: url },
-                success: function (srcDoc) {
-                    callback(srcDoc);
+                data: { GUID: _clusterGUID },
+                success: function (filters) {
+                    if (filters.length) {
+                        for (var i = 0; i < filters.length; i++) {
+                            var id = filters[i].Id;
+                            var selector = filters[i].Selector;
+                            _selectors.push(selector);
+                            var action = filters[i].Action;
+                            var actiontxt = (function () {
+                                switch (action) {
+                                    case 0:
+                                        return 'Grab';
+                                        break;
+                                    case 1:
+                                        return 'Ignore';
+                                        break;
+                                    case 2:
+                                        return 'Click';
+                                        break;
+                                    default:
+                                        return 'Unknown';
+                                        break;
+                                }
+                            })();
+                            var required = filters[i].Required;
+                            var column = filters[i].Column;
+                            var filterItem = '<div id="' + id + '" class="filteritem" selector="' + selector + '" action="' + action + '"><div class="' + (required ? 'glyphicon glyphicon-star' : 'glyphiconempty') + '"></div><div>' + actiontxt + '</div><div>' + column + '</div></div>';
+                            $('#filtercontainer').append(filterItem);
+                        }
+                        updateCanvas();
+                    }
                 },
-                error: function (error) {
-                    alert(error);
-                    callback("invalid");
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
                 }
-            })
+            });
+        };
+
+        var selectCluster = function (guid) {
+            if (_clusterGUID)
+                $('#' + _clusterGUID).css('background-color', '');
+            _clusterGUID = guid;
+            $('#title').val($('#' + _clusterGUID + ' div:nth-child(2)').text());
+            updateFilterList();
+            resetFilter();
+            $('#' + _clusterGUID).css('background-color', '#888');
+        };
+
+        var selectFilter = function (id) {
+            if (_tempOverlay)
+                _tempOverlay.remove();
+            _selectedFilter = parseInt(id);
+            $('#selector').val($('#' + id).attr('selector'));
+            $('#action').val($('#' + id).attr('action'));
+            $('#column').val($('#' + id + ' div:nth-child(3)').text());
+            $('#required').prop('checked', $('#' + id + ' div:nth-child(1)').hasClass('glyphicon-star'));
+        };
+
+        var deleteFilter = function () {
+            if (!_selectedFilter)
+                return;
+
+            $.ajax({
+                url: '/Home/DeleteFilter',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    Id: _selectedFilter,
+                },
+                success: function (result) {
+                    if (!result)
+                        alert("Something went wrong removing the filter");
+                    updateFilterList();
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.status);
+                    alert(thrownError);
+                }
+            });
+            _selectedFilter = null;
         };
 
         var updateCanvasDim = function (width, height) {
@@ -541,7 +715,22 @@ var UI = (function () {
 
         var updateCanvas = function () {
             _canvas.clear();
-            //poll server for stuff to draw on canvas
+            for(var i = 0; i < _selectors.length; i++) {
+                var target = $(_iframe).contents().find(_selectors[i])
+
+                var rect = new fabric.Rect({
+                    left: $(target).offset().left,
+                    top: $(target).offset().top,
+                    fill: new fabric.Color('rgb(10, 20, 30)'),
+                    width: $(target).outerWidth(),
+                    height: $(target).outerHeight(),
+                    stroke: '#FFF',
+                    strokewidth: 3,
+                    opacity: 0.5
+                });
+                _canvas.add(rect);
+            }
+            _canvas.renderAll();
         };
 
         var getHierarchy = function (target) {
@@ -557,8 +746,6 @@ var UI = (function () {
             Init: init,
             UpdateSelector: updateSelector,
             Grab: grab,
-            UpdateCanvasDim: updateCanvasDim,
-            UpdateCanvas: updateCanvas,
             RecordClick: recordClick,
         }
     })();

@@ -213,6 +213,7 @@ body > section > div {
 .filteritem div:last-child {
     margin-right: 10px;
     overflow: hidden;
+    white-space: nowrap;
 }
 
 .filteritem div:nth-child(2) {
@@ -220,5 +221,39 @@ body > section > div {
 }
 
 .filteritem:hover {
+    background-color: #ccc;
+}
+
+.clusteritem {
+    width: 96%;
+    height: 48px;
+    margin-left: 2%;
+    margin-right: 2%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    line-height: 46px;
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.clusteritem div {
+    margin-left: 5px;
+    margin-right: 5px;
+    display: inline;
+}
+.clusteritem div:first-child {
+    margin-left: 10px;
+    line-height: inherit;
+    top: 0;
+}
+
+.clusteritem div:last-child {
+    margin-right: 10px;
+    overflow: hidden;
+    width: 100%;
+    text-align: center;
+}
+
+.clusteritem:hover {
     background-color: #ccc;
 }

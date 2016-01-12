@@ -51,43 +51,79 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             browser.Click(target);
             string source = browser.PageSource;
             UpdateBase(ref source, url);
-            var result = new { Url = browser.Url, Src = source };
+            var result = new { Url = browser.Url, Src = source};
             browser.Close();
             return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-        public JsonResult AddFilter([Bind(Include = "Selector, Action, Required, Strip, Column, Order")] Models.Filter filter)
+        public JsonResult AddFilter([Bind(Include = "Selector, Action, Required, GUID, Strip, Column")] Models.Filter filter)
         {
-            if(ModelState.IsValid)
-            {
-                filterDb.Filters.Add(filter);
-                filterDb.SaveChanges();
-                return Json(true, JsonRequestBehavior.DenyGet);
-            }
-            return Json(false, JsonRequestBehavior.DenyGet);
+            filterDb.Filters.Add(filter);
+            filterDb.SaveChanges();
+            return Json(true, JsonRequestBehavior.DenyGet);
+        }
+
+        public JsonResult GetClusters(string Domain)
+        {
+            if (Domain == null)
+                return Json(false, JsonRequestBehavior.AllowGet);
+            List<Models.Website> websites = websiteDb.Websites.Where(x => x.Domain == Domain).ToList();
+            if (websites == null)
+                return Json(false, JsonRequestBehavior.AllowGet);
+            return Json(websites, JsonRequestBehavior.AllowGet);
+        }
+
+        public JsonResult GetFilters(string guid)
+        {
+            if(guid == null)
+                return Json(false, JsonRequestBehavior.AllowGet);
+            List<Models.Filter> filters = filterDb.Filters.Where(x => x.GUID == guid).ToList();
+            if(filters == null)
+                return Json(false, JsonRequestBehavior.AllowGet);
+            return Json(filters, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-
-        public JsonResult GetFilters(string Domain)
+        public JsonResult DeleteFilter(int? Id)
         {
-            if (Domain == null)
-            {
+            if(Id == null)
                 return Json(false, JsonRequestBehavior.AllowGet);
-            }
-            List<Models.Website> websites = websiteDb.Websites.Where(x => x.Domain == Domain).ToList();
-            if (websites == null)
+            Models.Filter filter = filterDb.Filters.Find(Id);
+            bool result = false;
+            if(filter != null)
             {
-                return Json(false, JsonRequestBehavior.AllowGet);
+                filterDb.Filters.Remove(filter);
+                filterDb.SaveChanges();
+                result = true;
             }
-            return Json(websites, JsonRequestBehavior.AllowGet);
+            return Json(result, JsonRequestBehavior.DenyGet);
+
+        }
+
+        [HttpPost]
+        public JsonResult UpdateFilter([Bind(Include = "Id, Selector, Action, Required, GUID, Column")] Models.Filter filter)
+        {
+            filterDb.Entry(filter).State = System.Data.Entity.EntityState.Modified;
+            filterDb.SaveChanges();
+            return Json(true, JsonRequestBehavior.DenyGet);
         }
 
 
         private void UpdateBase(ref string pageSource, string url)
         {
-            string host = BrowserDriver.GetHost(url);
+            string host = string.Format("http://{0}", BrowserDriver.GetHost(url));
+
+            List <Models.Website> existingFilters = websiteDb.Websites.Where(x => x.Domain == host).ToList();
+            
+            if(existingFilters.Count == 0)
+            {
+                string guid = Guid.NewGuid().ToString().Replace("-", "");
+                Website website = new Website() { Domain = host, GUID = guid, Name = guid };
+                websiteDb.Websites.Add(website);
+                websiteDb.SaveChanges();
+            }
+
             HtmlDocument htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(pageSource);
             htmlDoc.DocumentNode.Descendants()
@@ -100,7 +136,7 @@ namespace Reinders_Data_Mining_Web_App.Controllers
             HtmlNode head = htmlDoc.DocumentNode.SelectSingleNode("//head");
             if (head != null)
             {
-                string newBaseContent = string.Format("<base id='basedomain' href='http://{0}'/>", host);
+                string newBaseContent = string.Format("<base id='basedomain' href='{0}'/>", host);
                 HtmlNode newBase = HtmlNode.CreateNode(newBaseContent);
                 head.PrependChild(newBase);
                 pageSource = htmlDoc.DocumentNode.OuterHtml;
