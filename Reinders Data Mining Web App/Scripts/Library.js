@@ -381,6 +381,12 @@ var UI = (function () {
                 updateCanvasDim($(this).contents().width(), $(this).contents().height());
                 updateClusterList();
             });
+
+            $(window).resize(function () {
+                updateCanvasDim($(_iframe).contents().width(), $(_iframe).contents().height());
+                updateCanvas();
+                resetFilter();
+            })
         };
 
 
@@ -407,41 +413,26 @@ var UI = (function () {
             if (!$($(_iframe).contents().find($('#selector').val())).length)
                 return;
             var element = $('#selector').val();
+            var obj = getItemInCanvas(element);
             if (up) {
-                var obj = getItemInCanvas(element);
                 var currentVal = parseInt($('#selectorlevel').val());
-                if ((currentVal + 1) < _elementTree.length) {
+                if ((currentVal + 1) < _elementTree.length)
                     $('#selectorlevel').val(currentVal + 1);
-                
-                    var currentVal = parseInt($('#selectorlevel').val());
-                    obj.set({
-                        'height': $(_elementTree[currentVal]).outerHeight(),
-                        'width': $(_elementTree[currentVal]).outerWidth(),
-                        'top': $(_elementTree[currentVal]).offset().top,
-                        'left': $(_elementTree[currentVal]).offset().left,
-                    });
-                    $('#selector').val($(_elementTree[currentVal]).getSelector());
-                    _canvas.renderAll();
-                }
             } else {
-                var obj = getItemInCanvas(element);
                 var currentVal = parseInt($('#selectorlevel').val());
-                if (currentVal > 0) {
+                if (currentVal > 0)
                     $('#selectorlevel').val(currentVal - 1);
-                
-                    var currentVal = parseInt($('#selectorlevel').val());
-                    obj.set({
-                        'height': $(_elementTree[currentVal]).outerHeight(),
-                        'width': $(_elementTree[currentVal]).outerWidth(),
-                        'top': $(_elementTree[currentVal]).offset().top,
-                        'left': $(_elementTree[currentVal]).offset().left,
-                    });
-                    $('#selector').val($(_elementTree[currentVal]).getSelector());
-                    _canvas.renderAll();
-                }
-                return obj;
             }
-
+            var currentVal = parseInt($('#selectorlevel').val());
+            obj.set({
+                'height': $(_elementTree[currentVal]).outerHeight(),
+                'width': $(_elementTree[currentVal]).outerWidth(),
+                'top': $(_elementTree[currentVal]).offset().top,
+                'left': $(_elementTree[currentVal]).offset().left,
+            });
+            $('#selector').val($(_elementTree[currentVal]).getSelector());
+            _canvas.renderAll();
+            return;
         };
 
         var grab = function (target) {
@@ -687,6 +678,7 @@ var UI = (function () {
             $('#action').val($('#' + id).attr('action'));
             $('#column').val($('#' + id + ' div:nth-child(3)').text());
             $('#required').prop('checked', $('#' + id + ' div:nth-child(1)').hasClass('glyphicon-star'));
+            getHierarchy($('#selector').val());
         };
 
         var deleteFilter = function () {
@@ -748,7 +740,7 @@ var UI = (function () {
             _elementTree = [];
             $('#selectorlevel').val(0);
             _elementTree.push(target);
-            $(_elementTree[0]).parents().each(function () {
+            $(_iframe).contents().find(_elementTree[0]).parents().each(function () {
                 _elementTree.push(this);
             });
         };

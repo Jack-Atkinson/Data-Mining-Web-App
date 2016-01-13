@@ -59,9 +59,19 @@ namespace Reinders_Data_Mining_Web_App.Library
             string outerHtml = null;
             try
             {
-                outerHtml = includeOuter ?
-                    Driver.FindElement(By.jQuery(target)).GetAttribute("outerHTML") :
-                    Driver.FindElement(By.jQuery(target)).GetAttribute("innerHTML"); //outerHTML
+                string tagname = Driver.FindElement(By.jQuery(target)).TagName;
+                string href = Driver.FindElement(By.jQuery(target)).GetAttribute("href");
+                if (tagname == "a" &&
+                    href != null)
+                {
+                    outerHtml = href;
+                }
+                else
+                {
+                    outerHtml = includeOuter ?
+                        Driver.FindElement(By.jQuery(target)).GetAttribute("outerHTML") :
+                        Driver.FindElement(By.jQuery(target)).GetAttribute("innerHTML"); //outerHTML
+                }
             }
             catch
             {

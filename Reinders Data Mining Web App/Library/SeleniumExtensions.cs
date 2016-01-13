@@ -40,9 +40,8 @@ namespace Reinders_Data_Mining_Web_App.Library
         public static void LoadjQuery(this RemoteWebDriver driver, TimeSpan? timeout = null)
         {
             //Get the url to load jQuery from
-            string jQueryURL = HttpContext.Current.Server.MapPath("~/Scripts/jquery-2.1.4.min.js");
-
-            //Script to load jQuery from external site
+            string jQueryURL = "http://code.jquery.com/jquery-latest.min.js";
+            
             string loadingScript =
                 @"if (typeof jQuery != 'function')
                   {
@@ -53,7 +52,6 @@ namespace Reinders_Data_Mining_Web_App.Library
                       headID.appendChild(newScript);
                   }
                   return (typeof jQuery == 'function');";
-
             bool loaded = (bool)driver.ExecuteScript(loadingScript);
 
             if (!loaded)

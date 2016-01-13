@@ -39,6 +39,7 @@ namespace ReadWriteCsv
             foreach (string value in row)
             {
                 // Add separator if this isn't the first value
+
                 if (!firstColumn)
                     builder.Append(',');
                 // Implement special handling for values that contain comma or quote
