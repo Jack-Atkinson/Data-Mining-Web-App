@@ -179,11 +179,55 @@ namespace Reinders_Data_Mining_Web_App.Library
             string folderPath = "~/Downloads/" + guid + "/" + index;
             var path = HttpContext.Current.Server.MapPath(folderPath);
             Directory.CreateDirectory(path);
+            string fullPath = path + "/" + filename;
             Uri uri = new Uri(url);
-            string ext = Path.GetExtension(url);
             using (WebClient client = new WebClient())
             {
-                client.DownloadFile(url, path + "/" + filename + ext);
+                try
+                {
+                    byte[] fileBytes = client.DownloadData(url);
+
+                    string fileType = client.ResponseHeaders[HttpResponseHeader.ContentType];
+
+                    if (fileType != null)
+                    {
+                        switch (fileType)
+                        {
+                            case "image/jpeg":
+                                fullPath += ".jpg";
+                                break;
+                            case "image/gif":
+                                fullPath += ".gif";
+                                break;
+                            case "image/png":
+                                fullPath += ".png";
+                                break;
+                            case "application/pdf":
+                                fullPath += ".pdf";
+                                break;
+                            default:
+                                break;
+                        }
+
+                        File.WriteAllBytes(fullPath, fileBytes);
+                    }
+                    //client.DownloadFile(url, path + "/" + filename + ext);
+                }
+                catch
+                {
+
+                    DirectoryInfo directory = new DirectoryInfo(path);
+                    bool empty = true;
+                    if (directory.Exists)
+                    {
+                        foreach (FileInfo file in directory.GetFiles())
+                        {
+                            empty = false;
+                        }
+                    }
+                    if(empty)
+                        Directory.Delete(path); //check if empty, if so, then delete
+                }
             }
         }
 

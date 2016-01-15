@@ -348,6 +348,7 @@ var UI = (function () {
 
             $('#delete').click(function () {
                 deleteFilter();
+                updateCanvas();
                 resetFilter(); //gotta remove filter overlay from canvas too
             });
 
@@ -414,12 +415,11 @@ var UI = (function () {
                 return;
             var element = $('#selector').val();
             var obj = getItemInCanvas(element);
+            var currentVal = parseInt($('#selectorlevel').val());
             if (up) {
-                var currentVal = parseInt($('#selectorlevel').val());
                 if ((currentVal + 1) < _elementTree.length)
                     $('#selectorlevel').val(currentVal + 1);
             } else {
-                var currentVal = parseInt($('#selectorlevel').val());
                 if (currentVal > 0)
                     $('#selectorlevel').val(currentVal - 1);
             }
@@ -718,7 +718,7 @@ var UI = (function () {
             _canvas.clear();
             for(var i = 0; i < _selectors.length; i++) {
                 var target = $(_iframe).contents().find(_selectors[i])
-                if (!target.length)
+                if (!target.length || $(target).css('display') == 'none')
                     continue;
                 var color = $('#filtercontainer > div:nth(' + i + ')').attr('action') == "1" ? 'red' : new fabric.Color('rgb(10, 20, 30)');
                 var rect = new fabric.Rect({
@@ -756,7 +756,4 @@ var UI = (function () {
     return {
         Init: init
     }
-
-
-
 })();
