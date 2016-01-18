@@ -5,8 +5,8 @@
     if (!el || !el.tagName) {
         return '';
     }
-
-    // If we have an ID, we're done; that uniquely identifies this element
+    
+    
     var el$ = $(el);
     var id = el$.attr('id');
     if (id) {
@@ -21,7 +21,7 @@
 
     var selector;
     var parent$ = el$.parent();
-    var siblings$ = parent$.children();
+    var siblings$ = parent$.children(el.tagName);
     var needParent = false;
     if (classSelector && siblings$.filter(classSelector).length == 1) {
         // Classes are unique among siblings; use that
@@ -31,7 +31,7 @@
         selector = el.tagName;
     } else {
         // Default to saying "nth child"
-        selector = ':nth(' + $(this).index() + ')';
+        selector = el.tagName + ':nth(' + siblings$.index(el$) + ')'; //make this relative to the actual element type
         needParent = true;
     }
 
