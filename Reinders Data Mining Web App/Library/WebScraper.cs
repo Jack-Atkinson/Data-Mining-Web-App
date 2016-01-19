@@ -90,9 +90,10 @@ namespace Reinders_Data_Mining_Web_App.Library
                                 string result = driver.GetElement(filter.Selector, false);
                                 if(result != null)
                                 {
-                                    if(isFile(result))
+                                    string downloadlink = isFile(result);
+                                    if(downloadlink != null)
                                     {
-                                        DownloadFile(result, guid, rowindex, filter.Column);
+                                        DownloadFile(downloadlink, guid, rowindex, filter.Column);
                                     }
                                     foreach (Models.Filter igfilter in filterDb.Filters.Where(x => x.Action == 1))
                                     {
@@ -149,7 +150,7 @@ namespace Reinders_Data_Mining_Web_App.Library
             return 0;
         }
 
-        public bool isFile(string link)
+        public string isFile(string link)
         {
             try
             {
@@ -157,20 +158,20 @@ namespace Reinders_Data_Mining_Web_App.Library
 
                 // instruct the server to return headers only
                 request.Method = "HEAD";
-
+                request.AllowAutoRedirect = true;
                 // make the connection
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
 
                 // get the status code
                 HttpStatusCode status = response.StatusCode;
                 if (status == HttpStatusCode.OK)
-                    return true;
+                    return response.ResponseUri.AbsoluteUri;
                 else
-                    return false;
+                    return null;
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 
@@ -191,25 +192,36 @@ namespace Reinders_Data_Mining_Web_App.Library
 
                     if (fileType != null)
                     {
+                        bool shouldWrite = false;
                         switch (fileType)
                         {
                             case "image/jpeg":
                                 fullPath += ".jpg";
+                                shouldWrite = true;
                                 break;
                             case "image/gif":
                                 fullPath += ".gif";
+                                shouldWrite = true;
                                 break;
                             case "image/png":
                                 fullPath += ".png";
+                                shouldWrite = true;
+                                break;
+                            case "image/tiff":
+                                fullPath += ".tiff";
+                                shouldWrite = true;
                                 break;
                             case "application/pdf":
                                 fullPath += ".pdf";
+                                shouldWrite = true;
                                 break;
                             default:
                                 break;
                         }
-
-                        File.WriteAllBytes(fullPath, fileBytes);
+                        if (shouldWrite)
+                            File.WriteAllBytes(fullPath, fileBytes);
+                        else
+                            throw new Exception(); // for cleanup
                     }
                     //client.DownloadFile(url, path + "/" + filename + ext);
                 }

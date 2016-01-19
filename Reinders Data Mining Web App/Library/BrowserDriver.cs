@@ -61,10 +61,21 @@ namespace Reinders_Data_Mining_Web_App.Library
             {
                 string tagname = Driver.FindElement(By.jQuery(target)).TagName;
                 string href = Driver.FindElement(By.jQuery(target)).GetAttribute("href");
-                if (tagname == "a" &&
-                    href != null)
+                string src = Driver.FindElement(By.jQuery(target)).GetAttribute("src");
+                if ((tagname == "a" || tagname == "img") &&
+                    (href != null || src != null))
                 {
-                    outerHtml = href;
+                    switch(tagname)
+                    {
+                        case "img":
+                            outerHtml = src;
+                            break;
+                        case "a":
+                            outerHtml = href;
+                            break;
+                        default:
+                            break;
+                    }
                 }
                 else
                 {
